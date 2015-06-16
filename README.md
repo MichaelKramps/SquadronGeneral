@@ -1,0 +1,2 @@
+# SquadronGeneral
+Collectible Card Game
