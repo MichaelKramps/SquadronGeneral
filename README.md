@@ -1,2 +1,2 @@
 # SquadronGeneral
-Collectible Card Game
+Collectible Card Game played on your browser
