@@ -36,6 +36,6 @@ var genericCard = {
     c: 0, // (cost) taken from player's energy store
     t: 0, // (type) 0: ship, 1: factory, 2: command, 3: attachment
     a: [0, 0], // (attack) [attack power, attack type]
-    d: [0, 0], // (defense) [defense power, defense type]
+    d: [0, 0], // (defense) [current health, max health]
     s: [0, 0, 0] // (special ability) [ability listening(what game state triggers the ability), ability type, ability power]
 }
