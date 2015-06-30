@@ -4,7 +4,6 @@ var gameState = {
     p = 1, // which player has priority
     t = 1, // which player's turn it is
     ph = 0, // what game phase (0: start turn, 1: draw card, 2: main phase, 3: end of turn)
-    stack = [], // add a new card to the stack array when a card is played(cards in stack are always in a player's hand)
     i1 = 20, // Integrity of player 1's mother ship
     i2 = 20, // Integrity of player 2's mother ship
     s1 = 20, // Shield on player 1's mother ship
