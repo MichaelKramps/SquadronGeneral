@@ -33,8 +33,8 @@ var graveyard = [1, 23, 142] // again defined by card id's
 var genericCard = {
     id: 0, // (id) defines exactly what card it is
     c: 0, // (cost) taken from player's energy store
-    t: 0, // (type) 0: ship, 1: factory, 2: command, 3: attachment
-    a: [0, 0], // (attack) [attack power, attack type]
+    t: 0, // (type) 0: ship, 1: factory, 2: command
+    a: [0, 0, 0], // (attack) [able to attack(0: can attack, 1: can't attack, 2: frozen/jammed), attack power, attack type]
     d: [0, 0], // (defense) [current health, max health]
     s: [0, 0, 0] // (special ability) [ability listening(what game state triggers the ability), ability type, ability power]
 }
