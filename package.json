@@ -1,0 +1,11 @@
+{
+    "name": "Squadron General",
+    "version": "",
+    "private": true,
+    "dependencies": {
+        "socket.io": "*",
+        "express": "*",
+        "mongoose": "*"
+    }
+    "author": "Michael Kramps"
+}
