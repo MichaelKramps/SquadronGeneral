@@ -13,6 +13,9 @@ io.on('connection', function (socket) {
   socket.on("disconnect", function() {
       console.log("user has disconnected");
   });
+  socket.on("click", function(data){
+      console.log(data);
+  });
 });
 
 console.log("server is now running...");

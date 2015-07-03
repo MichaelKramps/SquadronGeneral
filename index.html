@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 </head>
 <body>
     <h1>testing 1 2 3...</h1>
@@ -9,9 +9,10 @@
 </html>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  var socket = io.connect();
-  socket.on('news', function (data) {
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
-  });
+    $(document).ready(function(){
+        var socket = io.connect();
+        $("h1").click(function(){
+            socket.emit("click", {clicked: "h1"});
+        });
+    });
 </script>
