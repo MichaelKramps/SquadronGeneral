@@ -1,20 +1,18 @@
-var fs = require('fs');
 var app = require('express')();
-var http = require('http').createServer(app);
-var io = require('socket.io').listen(http);
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
 
-// 404 Response
+server.listen(8888);
 
-
-// Handle User Request
-app.get("/", function(req, res){
-    res.sendFile(__dirname + '/index.html');
+app.get('/', function (req, res) {
+  res.sendFile(__dirname + '/index.html');
 });
 
-io.on('connection', function(socket){
-    console.log("a user connected");
+io.on('connection', function (socket) {
+  console.log("user connected")
+  socket.on("disconnect", function() {
+      console.log("user has disconnected");
+  });
 });
 
-app.listen(8888);
-
-console.log("Server is now running...");
+console.log("server is now running...");
