@@ -1,6 +1,7 @@
 var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+var coreSet = require('./coreSet.js');
 
 server.listen(8888);
 
@@ -14,8 +15,10 @@ io.on('connection', function (socket) {
       console.log("user has disconnected");
   });
   socket.on("click", function(data){
-      console.log(data);
+      console.log(data.clicked);
   });
 });
 
 console.log("server is now running...");
+var id = "1";
+console.log(coreSet[id].c);
