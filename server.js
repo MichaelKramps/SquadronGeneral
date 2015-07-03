@@ -1,25 +1,20 @@
-var http = require('http');
 var fs = require('fs');
+var app = require('express')();
+var http = require('http').createServer(app);
+var io = require('socket.io').listen(http);
 
 // 404 Response
-function send404Response(response) {
-    response.writeHead(404, {"Content-Type": "text/plain"});
-    response.write("Error 404: Page not Found");
-    response.end();
-}; 
+
 
 // Handle User Request
-function onRequest(request, response) {
+app.get("/", function(req, res){
+    res.sendFile(__dirname + '/index.html');
+});
 
-    if (request.method == 'GET' && request.url == '/') {
-        response.writeHead(200, {"Content-Type": "text/html"});
-        fs.createReadStream("./index.html").pipe(response);
-    } else {
-       send404Response(response); 
-    };
-    
-};
+io.on('connection', function(socket){
+    console.log("a user connected");
+});
 
-http.createServer(onRequest).listen(8888);
+app.listen(8888);
 
 console.log("Server is now running...");
