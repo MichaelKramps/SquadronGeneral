@@ -1,17 +1,19 @@
 var path = require('path');
 var app = require('express')();
 var server = require('http').Server(app);
+// var secure = require('https').Server({key: '', cert: ''}, app);
 var io = require('socket.io')(server);
 var coreSet = require('./coreSet.js');
 
 server.listen(8888);
+// secure.listen(9000);
 
 // Configure App
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Use Middleware
+// Use Middleware (act on the res, req parameters automatically)
 
 
 
@@ -29,6 +31,13 @@ io.on('connection', function (socket) {
   socket.on("click", function(data){
       console.log(data.clicked);
   });
+});
+
+app.get('/game/:id', function(req, res) {
+    res.render("game");
+    io.on('connection', function(socket){
+        console.log(req.path);
+    })
 });
 
 console.log("server is now running...");
