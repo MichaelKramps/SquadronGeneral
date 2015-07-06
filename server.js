@@ -1,23 +1,29 @@
 var path = require('path');
 var app = require('express')();
+
 var server = require('http').Server(app);
-// var secure = require('https').Server({key: '', cert: ''}, app);
+var secureOptions = 
+var secure = require('https').Server(secureOptions, app);
+
 var io = require('socket.io')(server);
+var cookieParser = require('cookie-parser');
+
+
 var coreSet = require('./coreSet.js');
 
 server.listen(8888);
-// secure.listen(9000);
+secure.listen(9000);
 
-// Configure App
+/**************** Configure App ****************/
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Use Middleware (act on the res, req parameters automatically)
+/***** Use Middleware (act on the res, req parameters automatically) *****/
 
+app.use(cookieParser());
 
-
-// Set Routes
+/**************** Set Routes ****************/
 
 app.get('/', function (req, res) {
   res.render("index");
@@ -36,7 +42,7 @@ io.on('connection', function (socket) {
 app.get('/game/:id', function(req, res) {
     res.render("game");
     io.on('connection', function(socket){
-        console.log(req.path);
+        console.log(req.cookies);
     })
 });
 
