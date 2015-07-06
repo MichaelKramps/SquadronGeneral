@@ -1,8 +1,12 @@
 var path = require('path');
+var fs = require('fs');
 var app = require('express')();
 
 var server = require('http').Server(app);
-var secureOptions = 
+var secureOptions = {
+    key: fs.readFileSync(path.join(__dirname, 'ssl/superSecret.key')),
+    cert: fs.readFileSync(path.join(__dirname, 'ssl/superSecret.cert'))
+};
 var secure = require('https').Server(secureOptions, app);
 
 var io = require('socket.io')(server);
@@ -26,7 +30,7 @@ app.use(cookieParser());
 /**************** Set Routes ****************/
 
 app.get('/', function (req, res) {
-  res.render("index");
+    res.render("index");
 });
 
 io.on('connection', function (socket) {
@@ -40,9 +44,10 @@ io.on('connection', function (socket) {
 });
 
 app.get('/game/:id', function(req, res) {
+    res.cookie("cookie1", "23", {maxAge: 20000, httpOnly: true});
     res.render("game");
     io.on('connection', function(socket){
-        console.log(req.cookies);
+        console.log("user connected to game");
     })
 });
 
