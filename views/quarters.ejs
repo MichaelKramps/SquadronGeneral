@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+</head>
+<body>
+    <h1>General's Quarters</h1>
+    <a href="game/<%= Math.round(Math.random() * 1000) %>"><p>Skirmish</p></a>
+    <h2>Another header</h2>
+</body>
+</html>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    $(document).ready(function(){
+        var socket = io.connect();
+    });
+</script>
