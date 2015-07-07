@@ -2,7 +2,6 @@ var path = require('path');
 var fs = require('fs');
 var app = require('express')();
 
-var server = require('http').Server(app);
 var secureOptions = {
     key: fs.readFileSync(path.join(__dirname, 'ssl/superSecret.key')),
     cert: fs.readFileSync(path.join(__dirname, 'ssl/superSecret.cert'))
@@ -15,8 +14,7 @@ var cookieParser = require('cookie-parser');
 
 var coreSet = require('./coreSet.js');
 
-server.listen(8888);
-secure.listen(9000);
+secure.listen(8888);
 
 /**************** Configure App ****************/
 
