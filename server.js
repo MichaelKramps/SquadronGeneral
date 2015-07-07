@@ -41,6 +41,8 @@ app.use(cookieParser());
 
 /**************** Set Routes ****************/
 
+mongoose.connect('mongodb://localhost/test');
+
 io.on('connection', function (socket) {
   console.log("user connected")
   socket.on("disconnect", function() {
