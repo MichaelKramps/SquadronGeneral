@@ -9,7 +9,7 @@ var secureOptions = {
 };
 var secure = require('https').Server(secureOptions, app);
 
-var io = require('socket.io')(server);
+var io = require('socket.io')(secure);
 var cookieParser = require('cookie-parser');
 
 
