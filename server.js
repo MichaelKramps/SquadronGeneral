@@ -1,7 +1,7 @@
 var path = require('path');
 var fs = require('fs');
 var app = require('express')();
-var forceSSL = require('express-force-ssl');
+var mongoose = require('mongoose');
 
 var server = require('http').Server(app);;
 var secureOptions = {
