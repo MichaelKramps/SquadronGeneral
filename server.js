@@ -39,7 +39,7 @@ app.use(function (req, res, next) {
 });
 app.use(cookieParser());
 
-/**************** Set Routes ****************/
+/********** MongoDB **********/
 
 mongoose.connect('mongodb://localhost/test');
 var db = mongoose.connection;
@@ -47,6 +47,15 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function (callback) {
   console.log("yay!");
 });
+
+var joinGameSchema = mongoose.Schema({
+    _id = Number,
+    game = Number,
+    player = Number,
+});
+
+/**************** Set Routes ****************/
+
 
 io.on('connection', function (socket) {
   console.log("user connected")
