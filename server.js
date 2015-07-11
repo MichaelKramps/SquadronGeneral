@@ -17,7 +17,7 @@ var cookieParser = require('cookie-parser');
 
 /******** Require game specific modules ********/
 
-var coreSet = require('./coreSet.js');
+var coreSet = require('./cards/coreSet.js');
 
 /**************** Configure App ****************/
 
