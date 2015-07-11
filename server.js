@@ -54,6 +54,11 @@ var joinGameSchema = mongoose.Schema({
     player = Number,
 });
 
+var session = mongoose.Schema({
+    _id = Number,
+    pID = Number,
+});
+
 /**************** Set Routes ****************/
 
 
