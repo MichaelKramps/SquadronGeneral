@@ -1,7 +1,6 @@
 var path = require('path');
 var fs = require('fs');
 var app = require('express')();
-var mongoose = require('mongoose');
 
 var server = require('http').Server(app);;
 var secureOptions = {
@@ -17,6 +16,7 @@ var cookieParser = require('cookie-parser');
 
 /******** Require game specific modules ********/
 
+var mongo = require('./mongo/mongoMain.js');
 var coreSet = require('./cards/coreSet.js');
 
 /**************** Configure App ****************/
@@ -38,26 +38,6 @@ app.use(function (req, res, next) {
 	}
 });
 app.use(cookieParser());
-
-/********** MongoDB **********/
-
-mongoose.connect('mongodb://localhost/test');
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function (callback) {
-  console.log("yay!");
-});
-
-var joinGameSchema = mongoose.Schema({
-    _id = Number,
-    game = Number,
-    player = Number,
-});
-
-var session = mongoose.Schema({
-    _id = Number,
-    pID = Number,
-});
 
 /**************** Set Routes ****************/
 

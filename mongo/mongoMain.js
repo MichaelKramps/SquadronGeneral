@@ -17,3 +17,5 @@ var session = mongoose.Schema({
     _id = Number,
     pID = Number,
 });
+
+module.exports = {};
