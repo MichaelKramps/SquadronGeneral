@@ -10,12 +10,12 @@ db.once('open', function (callback) {
 });
 
 var joinGameSchema = mongoose.Schema({
-    _id = Number,
-    game = Number,
-    player = Number,
+    _id: Number,
+    game: Number,
+    player: Number,
 });
 
 var session = mongoose.Schema({
-    _id = Number,
-    pID = Number,
+    _id: Number,
+    pI: Number,
 });
