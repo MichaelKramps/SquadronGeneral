@@ -38,12 +38,19 @@ app.use(function (req, res, next) {
 	}
 });
 app.use(cookieParser());
+app.use(function(req, res, next){
+    if(!req.cookies['session']) {
+        res.cookie('session', Math.round(Math.random() * 1000), {httpOnly: true });
+        console.log(req.cookies['session']);
+    }
+    next();
+});
 
 /**************** Set Routes ****************/
 
 
 io.on('connection', function (socket) {
-  console.log("user connected")
+  console.log("user connected");
   socket.on("disconnect", function() {
       console.log("user has disconnected");
   });
