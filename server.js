@@ -16,7 +16,7 @@ var cookieParser = require('cookie-parser');
 
 /******** Require game specific modules ********/
 
-var mongo = require('./mongo/mongoMain.js');
+var mongoGame = require('./mongo/mongoGame.js');
 var coreSet = require('./cards/coreSet.js');
 
 /**************** Configure App ****************/
@@ -61,7 +61,7 @@ app.get('/quarters', function(req, res) {
 });
 
 app.get('/game/:id', function(req, res) {
-    res.cookie("cookie1", "23", {maxAge: 20000, httpOnly: true});
+    mongoGame.connect;
     res.render("game");
     io.on('connection', function(socket){
         console.log("user connected to game");

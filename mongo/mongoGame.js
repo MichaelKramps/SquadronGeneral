@@ -8,7 +8,7 @@ var mongoMain = require('./mongoMain.js');
 
 /****** exports ******/
 
-exports.connect = mongoMain.connect("localhost", "games");
+exports.connect = mongoose.connect("localhost", "games");
 
 var joinGameSchema = mongoose.Schema({
     _id: Number,
