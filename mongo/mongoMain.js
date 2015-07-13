@@ -1,3 +1,5 @@
+var exports = module.exports = {};
+
 var mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost/test');
@@ -17,5 +19,3 @@ var session = mongoose.Schema({
     _id = Number,
     pID = Number,
 });
-
-module.exports = {};
