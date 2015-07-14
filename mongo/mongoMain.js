@@ -10,3 +10,7 @@ exports.connect = function(domain, dbName){
         console.log("connected to " + dbName);
     });
 };
+
+exports.model = function(tableName, Schema) {
+    mongoose.model(tableName, Schema);
+};
