@@ -50,7 +50,6 @@ app.use(function(req, res, next){
 
 
 io.on('connection', function (socket) {
-  console.log("user connected");
   socket.on("disconnect", function() {
       console.log("user has disconnected");
   });
@@ -70,10 +69,6 @@ app.get('/quarters', function(req, res) {
 app.get('/game/:id', function(req, res) {
     mongoGame.connect;
     res.render("game");
-    io.on('connection', function(socket){
-        console.log("user connected to game");
-        console.log(req.params);
-    })
 });
 
 console.log("server is now running...");
