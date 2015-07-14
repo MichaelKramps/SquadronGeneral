@@ -14,3 +14,11 @@ exports.connect = function(domain, dbName){
 exports.model = function(tableName, Schema) {
     mongoose.model(tableName, Schema);
 };
+
+exports.save = function(){
+    
+};
+
+exports.find = function(){
+    
+};
