@@ -15,8 +15,8 @@ exports.model = function(tableName, Schema) {
     mongoose.model(tableName, Schema);
 };
 
-exports.save = function(){
-    
+exports.save = function(model){
+    model.save();
 };
 
 exports.find = function(){
