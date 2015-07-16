@@ -82,8 +82,11 @@ app.get('/game', function(req, res) {
             });
             res.redirect("/");
         } else {
+            console.log(openGame._id);
+            game.update({"_id": openGame._id}, {$set: {"pl": 2}}, function(err, data){
+                console.log("ran")
+            });
             res.redirect("/game/" + openGame._id);
-            //and add 1 to "pl"
         }
     });
 });
