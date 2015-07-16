@@ -59,6 +59,10 @@ exports.newGame = {
     b2: []// player 2's board (battlefield) state
 }
 
+exports.testSchema = mongoose.Schema({pl: Number});
+
+exports.newTest = {pl: 1};
+
 
 
 

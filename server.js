@@ -73,20 +73,18 @@ app.get('/quarters', function(req, res) {
 });
 
 app.get('/game', function(req, res) {
-    var game = mongoose.model("games", mongoGame.gameStateSchema);
+    var game = dbGames.model("games", mongoGame.testSchema);
     game.findOne({"pl": 1}, "_id", function(err, openGame){
-        console.log("hey");
-        if(openGame){
-            res.redirect("/game/" + openGame._id);
-        } else {
-            var newGame = new game(mongoGame.newGame);
+        if(openGame === null){
+            var newGame = new game(mongoGame.newTest);
             newGame.save(function(err, newGame){
-                console.log(newGame._id);
+                console.log("made new game");
             });
             res.redirect("/");
+        } else {
+            res.redirect("/game/" + openGame._id);
         }
     });
-    res.redirect("/");
 });
 
 app.get('/game/:id', function(req, res) {
