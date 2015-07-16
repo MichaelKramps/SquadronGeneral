@@ -4,13 +4,9 @@ var exports = module.exports = {};
 
 var mongoose = require('mongoose');
 
-var mongoMain = require('./mongoMain.js');
-
 /****** exports ******/
 
-exports.connect = mongoMain.connect("localhost", "players");
-
-var session = mongoose.Schema({
+exports.sessionSchema = mongoose.Schema({
     _id: Number,
     pI: Number,
 });

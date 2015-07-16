@@ -4,17 +4,15 @@ var exports = module.exports = {};
 
 var mongoose = require('mongoose');
 
-var mongoMain = require('./mongoMain.js');
-
 /****** Schemas ******/
 
-var joinGameSchema = mongoose.Schema({
+exports.joinGameSchema = mongoose.Schema({
     _id: Number,
     game: Number,
     player: Number,
 });
 
-var gameStateSchema = mongoose.Schema({
+exports.gameStateSchema = mongoose.Schema({
     _id: Number, // game id number
     pl: Number, // number of players who have joined the game
     p: Number, // which player has priority
@@ -38,28 +36,6 @@ var gameStateSchema = mongoose.Schema({
     b2: [{id: Number, t: Number, a: [Number], d: [Number], s: [Number]}]// player 2's board (battlefield) state
 });
 
-/****** exports ******/
 
-exports.connect = mongoMain.connect("localhost", "games");
 
-exports.joinGame = function(){
-    console.log("redirecting");
-    res.redirect("/");
-/*     var model = mongoMain.model("liveGames", gameStateSchema);
-    model.findOne({"pl": 1}, "_id", function(err, game){
-        if (err) {
-            return err;
-        } else {
-            if(game._id){
-                res.redirect("/game/" + game._id);
-            } else {
-                console.log("no available games");
-            }
-        }
-    }); */
-};
-
-exports.createNewGame = function(){
-    var hello = "hello";
-};
 

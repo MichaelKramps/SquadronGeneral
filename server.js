@@ -1,6 +1,7 @@
 var path = require('path');
 var fs = require('fs');
 var app = require('express')();
+var mongoose = require('mongoose');
 
 var server = require('http').Server(app);;
 var secureOptions = {
@@ -23,6 +24,11 @@ var coreSet = require('./cards/coreSet.js');
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+/************ Connect to Mongo Databases ************/
+
+var dbGames = mongoose.createConnection('mongodb://localhost/games');
+var dbPlayers = mongoose.createConnection('mongodb://localhost/players');
 
 /***** Use Middleware (act on the res, req parameters automatically) *****/
 
@@ -67,11 +73,9 @@ app.get('/quarters', function(req, res) {
 });
 
 app.get('/game', function(req, res) {
-    console.log("looking for a game");
-    mongoGame.connect;
-    //look for an open game
-    mongoGame.joinGame();
-    //if there is an open game, join it, else create a new one and join it
+    mongoGame.openGame(something, callback(){
+        res.redirect();
+    });
 });
 
 app.get('/game/:id', function(req, res) {
