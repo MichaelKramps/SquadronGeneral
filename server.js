@@ -70,7 +70,7 @@ app.get('/game', function(req, res) {
     console.log("looking for a game");
     mongoGame.connect;
     //look for an open game
-    mongoGame.joinGame;
+    mongoGame.joinGame();
     //if there is an open game, join it, else create a new one and join it
 });
 

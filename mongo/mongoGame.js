@@ -42,8 +42,10 @@ var gameStateSchema = mongoose.Schema({
 
 exports.connect = mongoMain.connect("localhost", "games");
 
-exports.openGames = function(){
-    var model = mongoMain.model("liveGames", gameStateSchema);
+exports.joinGame = function(){
+    console.log("redirecting");
+    res.redirect("/");
+/*     var model = mongoMain.model("liveGames", gameStateSchema);
     model.findOne({"pl": 1}, "_id", function(err, game){
         if (err) {
             return err;
@@ -54,7 +56,7 @@ exports.openGames = function(){
                 console.log("no available games");
             }
         }
-    });
+    }); */
 };
 
 exports.createNewGame = function(){
