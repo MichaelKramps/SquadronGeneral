@@ -73,16 +73,17 @@ app.get('/quarters', function(req, res) {
 });
 
 app.get('/game', function(req, res) {
-    var game = dbGames.model("games", mongoGame.testSchema);
+    var game = dbGames.model("games", mongoGame.gameStateSchema);
     game.findOne({"pl": 1}, "_id", function(err, openGame){
         if(openGame === null){
-            var newGame = new game(mongoGame.newTest);
+            var newGame = new game(mongoGame.newGame);
             newGame.save(function(err, newGame){
                 console.log("made new game");
             });
             res.redirect("/");
         } else {
             res.redirect("/game/" + openGame._id);
+            //and add 1 to "pl"
         }
     });
 });
