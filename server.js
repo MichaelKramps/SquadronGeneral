@@ -66,8 +66,15 @@ app.get('/quarters', function(req, res) {
     res.render("quarters");
 });
 
-app.get('/game/:id', function(req, res) {
+app.get('/game', function(req, res) {
+    console.log("looking for a game");
     mongoGame.connect;
+    //look for an open game
+    mongoGame.joinGame;
+    //if there is an open game, join it, else create a new one and join it
+});
+
+app.get('/game/:id', function(req, res) {
     res.render("game");
 });
 

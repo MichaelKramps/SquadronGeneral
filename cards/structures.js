@@ -1,6 +1,8 @@
 // Game State Structure
 
 var gameState = {
+    _id = 12345, // game id number
+    pl = 2, // number of players who have joined the game
     p = 1, // which player has priority
     t = 1, // which player's turn it is
     ph = 0, // what game phase (0: start turn, 1: draw card, 2: main phase, 3: end of turn)
@@ -16,9 +18,9 @@ var gameState = {
     h2 = [{id: 111, c: 1}, {id: 43, c: 12}], // cards in p2's hand
     g1 = [56, 44, 45], // cards in p1's graveyard
     g2 = [73, 34, 12, 11], // cards in p2's graveyard
-    r1 = 5 // race id will determine mothership's ability (activates at "start of turn")
-    r2 = 3 // race id will determine mothership's ability (activates at "start of turn")
-    b1 = [{id: 1, t: 3, a: [0, 0], d: [0, 0], s: [0, 0, 0]}, ...]// player 1's board (battlefield) state, each card is an object with id, type, attack, defense and ability
+    r1 = 5, // race id will determine mothership's ability (activates at "start of turn")
+    r2 = 3, // race id will determine mothership's ability (activates at "start of turn")
+    b1 = [{id: 1, t: 3, a: [0, 0], d: [0, 0], s: [0, 0, 0]}, ...],// player 1's board (battlefield) state, each card is an object with id, type, attack, defense and ability
     b2 = [{id: 1, t: 3, a: [0, 0], d: [0, 0], s: [0, 0, 0]}, ...]// player 2's board (battlefield) state
 }
 
