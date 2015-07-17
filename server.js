@@ -79,8 +79,8 @@ app.get('/game', function(req, res) {
             var newGame = new game(mongoGame.newGame);
             newGame.save(function(err, newGame){
                 console.log("made new game");
+                res.redirect("/game/" + newGame._id);
             });
-            res.redirect("/");
         } else {
             console.log(openGame._id);
             game.update({"_id": openGame._id}, {$set: {"pl": 2}}, function(err, data){
