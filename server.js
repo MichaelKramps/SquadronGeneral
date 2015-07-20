@@ -68,6 +68,10 @@ app.get('/', function (req, res) {
     res.render("index");
 });
 
+app.get('/login', function (req, res) {
+    res.render("login");
+});
+
 app.get('/quarters', function(req, res) {
     res.render("quarters");
 });
@@ -96,3 +100,6 @@ app.get('/game/:id', function(req, res) {
 });
 
 console.log("server is now running...");
+process.on('uncaughtException', function (err) {
+    console.log(err);
+}); 

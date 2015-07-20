@@ -5,7 +5,32 @@
 </head>
 <body>
     <h1>Login</h1>
-    
-    <p>login stuff</p>
+    <form id="login">
+    <input><br>
+    <input><br>
+    <input type="submit" value="Log In">
+    </form>
+    <form id="register">
+    <input><br>
+    <input><br>
+    <input type="submit" value="Register">
+    </form>
 </body>
 </html>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    $(document).ready(function(){
+        var socket = io.connect();
+        $("#login").submit(function(e){
+            e.preventDefault();
+            socket.emit("", {});
+        });
+        $("#register").submit(function(e){
+            e.preventDefault();
+            socket.emit("", {});
+        });
+        $("h2").click(function(){
+            socket.emit("click", {clicked: "h2"});
+        });
+    });
+</script>
