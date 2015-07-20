@@ -1,9 +1,5 @@
 var exports = module.exports = {};
 
-/****** requires ******/
-
-
-
 /****** exports ******/
 
 exports.token = function(length){
@@ -13,8 +9,6 @@ exports.token = function(length){
     for(i = 0; i < length; i++){
         var n = Math.floor(Math.random() * chars.length);
         token += chars[n];
-        if (i == length - 1) {
-            return token;
-        }
     }
+    return token;
 };
