@@ -59,8 +59,13 @@ io.on('connection', function (socket) {
   socket.on("disconnect", function() {
       console.log("user has disconnected");
   });
-  socket.on("click", function(data){
-      console.log(data.clicked);
+  socket.on("login", function(data){
+      //check data.token
+      console.log(data);
+  });
+  socket.on("register", function(data){
+      //check data.token
+      console.log(data);
   });
 });
 
@@ -69,7 +74,8 @@ app.get('/', function (req, res) {
 });
 
 app.get('/login', function (req, res) {
-    res.render("login");
+    var tokenGenerator = require("./mongo/token.js");
+    res.render("login", {loginToken: tokenGenerator.token(32), registerToken: tokenGenerator.token(32)});
 });
 
 app.get('/quarters', function(req, res) {

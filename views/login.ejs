@@ -6,13 +6,17 @@
 <body>
     <h1>Login</h1>
     <form id="login">
-    <input><br>
-    <input><br>
+    Email: <input name="email" id="loginEmail"><br>
+    Password: <input name="password" id="loginPassword"><br>
+    <input type="hidden" name="token" id="loginToken" value="<%= loginToken %>">
     <input type="submit" value="Log In">
     </form>
     <form id="register">
-    <input><br>
-    <input><br>
+    Email: <input name="email" id="registerEmail"><br>
+    Username: <input name="username" id="registerUsername"><br>
+    Password: <input name="password" id="registerPassword"><br>
+    Verify Password: <input name="verify" id="registerVerify"><br>
+    <input type="hidden" name="token" id="registerToken" value="<%= registerToken %>">
     <input type="submit" value="Register">
     </form>
 </body>
@@ -23,14 +27,11 @@
         var socket = io.connect();
         $("#login").submit(function(e){
             e.preventDefault();
-            socket.emit("", {});
+            socket.emit("login", {email: $("#loginEmail").val(), password: $("#loginPassword").val(), token: $("#loginToken").val()});
         });
         $("#register").submit(function(e){
             e.preventDefault();
-            socket.emit("", {});
-        });
-        $("h2").click(function(){
-            socket.emit("click", {clicked: "h2"});
+            socket.emit("register", {email: $("#registerEmail").val(), username: $("#registerUsername").val(), password: $("#registerPassword").val(), verify: $("#registerVerify").val(), token: $("#registerToken").val()});
         });
     });
 </script>
