@@ -19,6 +19,9 @@ var cookieParser = require('cookie-parser');
 
 var mongoGame = require('./mongo/mongoGame.js');
 var coreSet = require('./cards/coreSet.js');
+var tokenGenerator = require("./mongo/token.js");
+var parseCookieHeader = require("./functions/parseCookieHeader.js");
+var registerValidation = require("./functions/registerValidation.js");
 
 /**************** Configure App ****************/
 
@@ -46,13 +49,14 @@ app.use(function (req, res, next) {
 app.use(cookieParser());
 app.use(function(req, res, next){
     if(!req.cookies['session']) {
-        res.cookie('session', Math.round(Math.random() * 1000), {httpOnly: true });
+        res.cookie('session', Math.round(Math.random() * 1000), {httpOnly: true});
         console.log(req.cookies['session']);
     }
     next();
 });
 
-/**************** Set Routes ****************/
+
+/**************** IO functions ****************/
 
 
 io.on('connection', function (socket) {
@@ -60,22 +64,39 @@ io.on('connection', function (socket) {
       console.log("user has disconnected");
   });
   socket.on("login", function(data){
-      //check data.token
-      console.log(data);
+      // check for csrf
+      var cookieHeader = socket.handshake.headers.cookie;
+      var tokenCookie = parseCookieHeader.parse("token", cookieHeader);
+      if (tokenCookie && tokenCookie == data.token) {
+          // validate input
+      };
   });
   socket.on("register", function(data){
-      //check data.token
-      console.log(data);
+      // check for csrf
+      var cookieHeader = socket.handshake.headers.cookie;
+      var tokenCookie = parseCookieHeader.parse("token", cookieHeader);
+      if (tokenCookie && tokenCookie == data.token) {
+          // validate input
+          if (registerValidation.validate(data)){
+              console.log(data);
+          } else {console.log("failed validation");}
+      };
   });
 });
+
+
+/**************** Set Routes ****************/
+
 
 app.get('/', function (req, res) {
     res.render("index");
 });
 
 app.get('/login', function (req, res) {
-    var tokenGenerator = require("./mongo/token.js");
-    res.render("login", {loginToken: tokenGenerator.token(32), registerToken: tokenGenerator.token(32)});
+    // give user token cookie here
+    var token = tokenGenerator.token(32);
+    res.cookie("token", token, {httpOnly: true});
+    res.render("login", {loginToken: token, registerToken: token});
 });
 
 app.get('/quarters', function(req, res) {
