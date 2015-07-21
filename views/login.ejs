@@ -6,16 +6,18 @@
 <body>
     <h1>Login</h1>
     <form id="login">
+    <ul id="loginErrors"></ul>
     Email: <input name="email" id="loginEmail"><br>
-    Password: <input name="password" id="loginPassword"><br>
+    Password: <input type="password" name="password" id="loginPassword"><br>
     <input type="hidden" name="token" id="loginToken" value="<%= loginToken %>">
     <input type="submit" value="Log In">
     </form>
     <form id="register">
+    <ul id="registerErrors"></ul>
     Email: <input name="email" id="registerEmail"><br>
     Username: <input name="username" id="registerUsername"><br>
-    Password: <input name="password" id="registerPassword"><br>
-    Verify Password: <input name="verify" id="registerVerify"><br>
+    Password: <input type="password" name="password" id="registerPassword"><br>
+    Verify Password: <input type="password" name="verify" id="registerVerify"><br>
     <input type="hidden" name="token" id="registerToken" value="<%= registerToken %>">
     <input type="submit" value="Register">
     </form>
@@ -27,11 +29,23 @@
         var socket = io.connect();
         $("#login").submit(function(e){
             e.preventDefault();
+            $("#loginErrors").empty();
             socket.emit("login", {email: $("#loginEmail").val(), password: $("#loginPassword").val(), token: $("#loginToken").val()});
         });
         $("#register").submit(function(e){
             e.preventDefault();
+            $("#registerErrors").empty();
             socket.emit("register", {email: $("#registerEmail").val(), username: $("#registerUsername").val(), password: $("#registerPassword").val(), verify: $("#registerVerify").val(), token: $("#registerToken").val()});
+        });
+        socket.on("registerError", function(errors){
+            $.each(errors, function(i, error){
+                $("#registerErrors").append("<li>" + error + "</li>");
+            });
+        });
+        socket.on("loginError", function(errors){
+            $.each(errors, function(i, error){
+                $("#loginErrors").append("<li>" + error + "</li>");
+            });
         });
     });
 </script>

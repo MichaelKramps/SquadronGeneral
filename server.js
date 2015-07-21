@@ -18,10 +18,11 @@ var cookieParser = require('cookie-parser');
 /******** Require game specific modules ********/
 
 var mongoGame = require('./mongo/mongoGame.js');
+var mongoPlayer = require("./mongo/mongoPlayer.js");
 var coreSet = require('./cards/coreSet.js');
 var tokenGenerator = require("./mongo/token.js");
 var parseCookieHeader = require("./functions/parseCookieHeader.js");
-var registerValidation = require("./functions/registerValidation.js");
+var validation = require("./functions/validation.js");
 
 /**************** Configure App ****************/
 
@@ -69,6 +70,12 @@ io.on('connection', function (socket) {
       var tokenCookie = parseCookieHeader.parse("token", cookieHeader);
       if (tokenCookie && tokenCookie == data.token) {
           // validate input
+          var errors = validation.loginValidate(data);
+          if (errors.length == 0){
+              console.log("passed validation");
+          } else {
+              socket.emit("loginError", errors);;
+          }
       };
   });
   socket.on("register", function(data){
@@ -77,9 +84,12 @@ io.on('connection', function (socket) {
       var tokenCookie = parseCookieHeader.parse("token", cookieHeader);
       if (tokenCookie && tokenCookie == data.token) {
           // validate input
-          if (registerValidation.validate(data)){
-              console.log(data);
-          } else {console.log("failed validation");}
+          var errors = validation.registerValidate(data);
+          if (errors.length == 0){
+              var findEmail = mongoPlayer.checkEmail(data.email, mongoPlayer.createNewAccount, socket.emit("registerError", ["An account with that email already exists"]));
+          } else {
+              socket.emit("registerError", errors);;
+          }
       };
   });
 });
