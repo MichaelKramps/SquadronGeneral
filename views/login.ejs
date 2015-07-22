@@ -42,6 +42,12 @@
                 $("#registerMessages").append("<li>" + error + "</li>");
             });
         });
+        socket.on("registerSuccess", function(){
+            $("#registerEmail").val("");
+            $("#registerUsername").val("");
+            $("#registerPassword").val("");
+            $("#registerVerify").val("");
+        });
         socket.on("loginMessage", function(errors){
             $.each(errors, function(i, error){
                 $("#loginMessages").append("<li>" + error + "</li>");

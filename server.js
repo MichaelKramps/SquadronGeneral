@@ -72,7 +72,13 @@ io.on('connection', function (socket) {
           // validate input
           var errors = validation.loginValidate(data);
           if (errors.length == 0){
-              console.log("passed validation");
+              mongoPlayer.checkLogin(data, function(result){
+                  if (result == "process login") {
+                      // process login
+                  } else {
+                    socket.emit("loginMessage", [result]);
+                  }
+              });
           } else {
               socket.emit("loginMessage", errors);;
           }
@@ -92,6 +98,7 @@ io.on('connection', function (socket) {
                   } else {
                       mongoPlayer.createNewAccount(data);
                       socket.emit("registerMessage", ["You registered successfully, you may now log in."]);
+                      socket.emit("registerSuccess")
                   }
               });
           } else {
