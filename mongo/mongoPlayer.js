@@ -26,12 +26,12 @@ exports.sessionSchema = mongoose.Schema({
     pI: Number,
 });
 
-exports.checkEmail = function(email, found, notFound){
-    playerModel.findOne({"email": email}, "email", function(err, obj){
+exports.checkEmail = function(email, callback){
+    playerModel.findOne({"email": email}, function(err, obj){
         if (obj !== null) {
-            found
+            callback(true);
         } else {
-            notFound
+            callback(false);
         }
     })
 }

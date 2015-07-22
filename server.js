@@ -74,7 +74,7 @@ io.on('connection', function (socket) {
           if (errors.length == 0){
               console.log("passed validation");
           } else {
-              socket.emit("loginError", errors);;
+              socket.emit("loginMessage", errors);;
           }
       };
   });
@@ -86,9 +86,16 @@ io.on('connection', function (socket) {
           // validate input
           var errors = validation.registerValidate(data);
           if (errors.length == 0){
-              var findEmail = mongoPlayer.checkEmail(data.email, mongoPlayer.createNewAccount, socket.emit("registerError", ["An account with that email already exists"]));
+              mongoPlayer.checkEmail(data.email, function(found){
+                  if(found){
+                      socket.emit("registerMessage", ["An account already exists with that email"]);
+                  } else {
+                      mongoPlayer.createNewAccount(data);
+                      socket.emit("registerMessage", ["You registered successfully, you may now log in."]);
+                  }
+              });
           } else {
-              socket.emit("registerError", errors);;
+              socket.emit("registerMessage", errors);;
           }
       };
   });
