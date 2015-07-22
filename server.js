@@ -49,10 +49,7 @@ app.use(function (req, res, next) {
 });
 app.use(cookieParser());
 app.use(function(req, res, next){
-    if(!req.cookies['session']) {
-        res.cookie('session', Math.round(Math.random() * 1000), {httpOnly: true});
-        console.log(req.cookies['session']);
-    }
+    // process session cookies
     next();
 });
 
@@ -73,10 +70,10 @@ io.on('connection', function (socket) {
           var errors = validation.loginValidate(data);
           if (errors.length == 0){
               mongoPlayer.checkLogin(data, function(result){
-                  if (result == "process login") {
-                      // process login
+                  if (typeof result !== "string") {
+                      socket.emit("loginSuccess", result[0]);
                   } else {
-                    socket.emit("loginMessage", [result]);
+                      socket.emit("loginMessage", [result]);
                   }
               });
           } else {

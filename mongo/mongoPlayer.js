@@ -53,7 +53,7 @@ exports.checkLogin = function(data, callback){
     playerModel.findOne({"email": data.email}, function(err, player){
         if (player !== null) {
             if (passwordHash.verify(data.password, player.password)) {
-                callback("process login");
+                callback([player._id]);
             } else {
                 callback("Bad password");
             }
