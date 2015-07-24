@@ -1,5 +1,9 @@
 var exports = module.exports = {};
 
+/****** requires ******/
+
+var emailValidator = require('email-validator');
+
 /****** exports ******/
 
 exports.registerValidate = function(data){
@@ -12,7 +16,9 @@ exports.registerValidate = function(data){
         }
     }
     // validate email
-    
+    if (!emailValidator.validate(data.email)) {
+        errors.push("That is not a valid email address");
+    }
     // username between 4 and 20 characters
     if (data.username.length < 4) {
         errors.push("Username must be at least 4 characters");
