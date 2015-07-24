@@ -5,7 +5,12 @@
 </head>
 <body>
     <h1>Login</h1>
-    <div id="logout"><% if (loggedIn && loggedIn !== "loggedOut") { %>Logged In <% } else { %>Logged Out <% } %><a href="#">Log out</a></p></div>
+    <div id="logout"><% if (loggedIn && loggedIn !== "loggedOut") {
+        %>Logged In <% 
+    } else { 
+        %>Logged Out <% 
+    } %>
+    <a href="#">Log out</a></p></div>
     <form id="login">
     <ul id="loginMessages"></ul>
     Email: <input name="email" id="loginEmail"><br>
