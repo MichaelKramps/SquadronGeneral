@@ -1,6 +1,7 @@
 var path = require('path');
 var fs = require('fs');
-var app = require('express')();
+var express = require('express');
+var app = express();
 var mongoose = require('mongoose');
 
 var server = require('http').Server(app);;
@@ -36,6 +37,7 @@ var dbPlayers = mongoose.createConnection('mongodb://localhost/players');
 
 /***** Use Middleware (act on the res, req parameters automatically) *****/
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(function (req, res, next) {
 	if (req.secure) {
         console.log("secure");
@@ -48,8 +50,13 @@ app.use(function (req, res, next) {
 	}
 });
 app.use(cookieParser());
+// check whether player is logged in or not
 app.use(function(req, res, next){
-    // process session cookies
+    if (req.cookies.player){
+        res.locals.player = req.cookies.player
+    } else if (req.cookies.guest) {
+        res.locals.guest = req.cookies.guest
+    }
     next();
 });
 
@@ -121,6 +128,7 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/quarters', function(req, res) {
+    console.log(res.locals.player);
     res.render("quarters");
 });
 
