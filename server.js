@@ -110,6 +110,9 @@ io.on('connection', function (socket) {
           }
       };
   });
+  socket.on("logout", function(){
+      socket.emit("logout");
+  });
 });
 
 
@@ -124,7 +127,7 @@ app.get('/login', function (req, res) {
     // give user token cookie here
     var token = tokenGenerator.token(32);
     res.cookie("token", token, {httpOnly: true});
-    res.render("login", {loginToken: token, registerToken: token});
+    res.render("login", {loginToken: token, registerToken: token, loggedIn: res.locals.player});
 });
 
 app.get('/quarters', function(req, res) {
