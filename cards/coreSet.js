@@ -9,10 +9,10 @@ var genericCard = {
 
 module.exports = {
     "1": {
-        c: 3,
+        c: 1,
         t: [0, 0], // [ship, mercenary]
-        a: [0, 3, 0], // [not able to attack, attack power 3, attack type normal]
-        d: [3, 3], // [current health 3, max health 3]
-        s: [7, 1, 0] // [listens for damage dealt, shield ability, no defend]
+        a: [0, 1, 0], // [not able to attack, attack power 3, attack type normal]
+        d: [1, 1], // [current health 3, max health 3]
+        s: [8, 1, 0] // [listens for destruction, gives health, no defend]
     }
 }
