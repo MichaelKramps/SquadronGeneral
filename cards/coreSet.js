@@ -10,9 +10,27 @@ var genericCard = {
 module.exports = {
     "1": {
         c: 1,
-        t: [0, 0], // [ship, mercenary]
-        a: [0, 1, 0], // [not able to attack, attack power 3, attack type normal]
-        d: [1, 1], // [current health 3, max health 3]
-        s: [8, 1, 0] // [listens for destruction, gives health, no defend]
+        i: { // general info
+            t: 0, // type: ship
+            s: 0, // section: mercenaries
+            r: 0, // race: none
+            y: 1 // rarity: uncommon
+        },
+        a: { // attack info 
+            s: 0, // attack state: can't attack
+            p: 1, // attack power: 1
+            t: 0 // attack type: normal
+        },
+        d: { // defense info
+            c: 1, // current health: 1
+            m: 1, // max health: 1
+            t: 0 // defense type: normal
+        },
+        s: [ // special info (array of special objects)
+            {
+            l: 5, // event listener: ship destroyed
+            a: [3, [args]] // action: [actionID, [arguments]]
+        }
+        ]
     }
 }
