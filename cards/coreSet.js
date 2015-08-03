@@ -17,7 +17,7 @@ module.exports = {
             y: 1 // rarity: uncommon
         },
         a: { // attack info 
-            s: 0, // attack state: can't attack
+            s: 1, // attack state: can't attack
             p: 1, // attack power: 1
             t: 0 // attack type: normal
         },
@@ -29,8 +29,15 @@ module.exports = {
         s: [ // special info (array of special objects)
             {
             l: 5, // event listener: ship destroyed
-            a: [3, [args]] // action: [actionID, [arguments]]
+            a: [0, []] // action: [actionID, [arguments]]
         }
         ]
+    },
+    "2": {
+        c: 3,
+        i: {t: 0, s: 0, r: 0, y: 1},
+        a: {s: 0, p: 2, t: 0},
+        d: {c: 3, m: 3, t: 0},
+        s: [{l: 0, a: [0, []]}]
     }
 }
