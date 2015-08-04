@@ -3,13 +3,14 @@
 /****** Ability Listening ******/
 
 // 0: no ability
-// 1: Start of Turn
-// 2: End of Turn
-// 3: Card is drawn
-// 4: Card is played
-// 5: Ship is destroyed
-// 6: Ship attacks
-// 7: Damage is dealt
-
+// 1: Immediately
+// 2: Start of Turn
+// 3: End of Turn
+// 4: Card is drawn
+// 5: Card is played
+// 6: Ship is destroyed
+// 7: Ship attacks
+// 8: Damage is dealt
+// 9: Click event
 
 

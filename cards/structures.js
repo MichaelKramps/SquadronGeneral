@@ -49,7 +49,7 @@ var genericCard = {
         d: { // defense info
             c: 1, // current health: 1
             m: 1, // max health: 1
-            t: 0 // defense type: (0 normal), (1 defend)
+            t: 0 // defense type: (0 normal), (1 defend), (2 cloaking)
         },
         s: [ // special info (array of special objects)
             {
