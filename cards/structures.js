@@ -37,19 +37,19 @@ var genericCard = {
         c: 1,
         i: { // general info
             t: 0, // type: (0 ship), (1 command), (2 factory)
-            s: 0, // section: (0 mercenaries), (1 earthlings), (2 Martians), (3 robots), (4 shapeshifters), (5 smugglers), (6 parasites), (7 brutes), (8 republic)
-            r: 0, // race: (0 none), (1 rebel), (2 human), (3 martian)
+            s: 0, // section: (0 mercenaries), (1 earthlings), (2 Martians), (3 shapeshifters), (4 robots), (5 smugglers), (6 parasites), (7 brutes), (8 republic)
+            r: 0, // race: (0 none), (1 rebel), (2 human), (3 martian), (4 robot)
             y: 1 // rarity: (0 common), (1 uncommon), (2 rare), (3 legendary)
         },
         a: { // attack info 
             s: 1, // attack state: (0 can attack), (1 can't attack), (2 disabled)
             p: 1, // attack power: 1
-            t: 0 // attack type: (0 normal), (1 first strike)
+            t: 0 // attack types: [array of numbers] - (0 normal), (1 first strike)
         },
         d: { // defense info
             c: 1, // current health: 1
             m: 1, // max health: 1
-            t: 0 // defense type: (0 normal), (1 defend), (2 cloaking)
+            t: 0 // defense types: [array of numbers] - (0 normal), (1 defend), (2 cloaking)
         },
         s: [ // special info (array of special objects)
             {
