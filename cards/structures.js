@@ -44,12 +44,12 @@ var genericCard = {
         a: { // attack info 
             s: 1, // attack state: (0 can attack), (1 can't attack), (2 disabled)
             p: 1, // attack power: 1
-            t: 0 // attack types: [array of numbers] - (0 normal), (1 first strike)
+            t: [0] // attack types: [array of numbers] - (0 normal), (1 first strike)
         },
         d: { // defense info
             c: 1, // current health: 1
             m: 1, // max health: 1
-            t: 0 // defense types: [array of numbers] - (0 normal), (1 defend), (2 cloaking)
+            t: [0] // defense types: [array of numbers] - (0 normal), (1 defend), (2 cloaking)
         },
         s: [ // special info (array of special objects)
             {
