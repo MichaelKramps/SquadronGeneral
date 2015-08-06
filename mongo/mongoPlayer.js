@@ -63,3 +63,13 @@ exports.checkLogin = function(data, callback){
     });
 }
 
+exports.getPlayerInfo = function(id, callback){
+    playerModel.findOne({"_id": id}, function(err, player){
+        if (player !== null) {
+            callback(player);
+        } else {
+            callback(false);
+        }
+    });
+}
+

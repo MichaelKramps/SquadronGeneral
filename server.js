@@ -131,8 +131,14 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/quarters', function(req, res) {
-    console.log(res.locals.player);
-    res.render("quarters");
+    mongoPlayer.getPlayerInfo(res.locals.player, function(playerInfo){
+        if (playerInfo) {
+            res.render("quarters", playerInfo);
+            console.log(playerInfo.email);
+        } else {
+            console.log("player not found");
+        }
+    });
 });
 
 app.get('/game', function(req, res) {
