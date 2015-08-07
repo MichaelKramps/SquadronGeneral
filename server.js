@@ -133,7 +133,7 @@ app.get('/login', function (req, res) {
 app.get('/quarters', function(req, res) {
     mongoPlayer.getPlayerInfo(res.locals.player, function(playerInfo){
         if (playerInfo) {
-            res.render("quarters", playerInfo);
+            res.render("quarters", {player: playerInfo});
             console.log(playerInfo.email);
         } else {
             console.log("player not found");
@@ -142,22 +142,7 @@ app.get('/quarters', function(req, res) {
 });
 
 app.get('/game', function(req, res) {
-    var game = dbGames.model("games", mongoGame.gameStateSchema);
-    game.findOne({"pl": 1}, "_id", function(err, openGame){
-        if(openGame === null){
-            var newGame = new game(mongoGame.newGame);
-            newGame.save(function(err, newGame){
-                console.log("made new game");
-                res.redirect("/game/" + newGame._id);
-            });
-        } else {
-            console.log(openGame._id);
-            game.update({"_id": openGame._id}, {$set: {"pl": 2}}, function(err, data){
-                console.log("ran")
-            });
-            res.redirect("/game/" + openGame._id);
-        }
-    });
+    res.render("game");
 });
 
 app.get('/game/:id', function(req, res) {
