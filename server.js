@@ -113,6 +113,9 @@ io.on('connection', function (socket) {
   socket.on("logout", function(){
       socket.emit("logout");
   });
+  socket.on("gameStart", function(){
+      console.log("a game started");
+  });
 });
 
 
@@ -133,20 +136,11 @@ app.get('/login', function (req, res) {
 app.get('/quarters', function(req, res) {
     mongoPlayer.getPlayerInfo(res.locals.player, function(playerInfo){
         if (playerInfo) {
-            res.render("quarters", {player: playerInfo});
-            console.log(playerInfo.email);
+            res.render("game", {player: playerInfo});
         } else {
             console.log("player not found");
         }
     });
-});
-
-app.get('/game', function(req, res) {
-    res.render("game");
-});
-
-app.get('/game/:id', function(req, res) {
-    res.render("game");
 });
 
 console.log("server is now running...");

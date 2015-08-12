@@ -2,15 +2,12 @@
 <html>
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/css/stylesheet.css">
 </head>
 <body>
-    <p><%= new Date(); %></p>
 </body>
 </html>
 <script src="/socket.io/socket.io.js"></script>
-<script>
-    $(document).ready(function(){
-        var socket = io.connect();
-    });
-</script>
-<script src="/js/pixi.min.js"></script>
+<script src="/js/phaser.min.js"></script>
+<script src="/js/quarters.js"></script>
+<script src="/js/gameMain.js"></script>
