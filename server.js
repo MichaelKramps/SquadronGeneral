@@ -106,15 +106,19 @@ io.on('connection', function (socket) {
                   }
               });
           } else {
-              socket.emit("registerMessage", errors);;
+              socket.emit("registerMessage", errors);
           }
       };
   });
   socket.on("logout", function(){
       socket.emit("logout");
   });
-  socket.on("gameStart", function(){
-      console.log("a game started");
+  socket.on("getPlayerInfo", function(){
+      var cookieHeader = socket.handshake.headers.cookie;
+      var playerCookie = parseCookieHeader.parse("player", cookieHeader);
+      mongoPlayer.getPlayerInfo(playerCookie, function(playerInfo){
+          socket.emit("sendPlayerInfo", playerInfo);
+      });
   });
 });
 
