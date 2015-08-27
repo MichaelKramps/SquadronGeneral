@@ -19,12 +19,24 @@ var quarters = {
         tournamentPoints.anchor.set(0);
         
         // Change Game States
-
+        solo = game.add.text(game.world._width * 0.5, game.world._height * 0.3, "solo", style);
+        solo.inputEnabled = true;
+        solo.anchor.set(0);
     },
     
     update: function () {
-        if(quartersHeader.input.pointerOver()){
-            quartersHeader.alpha = 0.5;
+        this.changeStates(solo, "solo");
+    },
+    
+    changeStates: function (text, state) {
+        if(text.input.pointerOver()){
+            text.alpha = 0.5;
+        } else if (text.input.pointerOut()) {
+            text.alpha = 1;
+        }
+        
+        if (text.input.pointerDown()) {
+            game.state.start(state);
         }
     }
 
