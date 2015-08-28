@@ -120,6 +120,9 @@ io.on('connection', function (socket) {
           socket.emit("sendPlayerInfo", playerInfo);
       });
   });
+  socket.on("getCardSetInfo", function() {
+      socket.emit("sendCardSetInfo", coreSet);
+  });
 });
 
 

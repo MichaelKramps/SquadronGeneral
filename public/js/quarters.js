@@ -22,10 +22,15 @@ var quarters = {
         solo = game.add.text(game.world._width * 0.5, game.world._height * 0.3, "solo", style);
         solo.inputEnabled = true;
         solo.anchor.set(0);
+        
+        collection = game.add.text(game.world._width * 0.5, game.world._height * 0.4, "collection", style);
+        collection.inputEnabled = true;
+        collection.anchor.set(0);
     },
     
     update: function () {
         this.changeStates(solo, "solo");
+        this.changeStates(collection, "collection");
     },
     
     changeStates: function (text, state) {
