@@ -120,8 +120,15 @@ io.on('connection', function (socket) {
           socket.emit("sendPlayerInfo", playerInfo);
       });
   });
+  // get card set info
   socket.on("getCardSetInfo", function() {
       socket.emit("sendCardSetInfo", coreSet);
+  });
+  // socket game functions
+    socket.on("startNewDemo", function(playerNumber){
+      mongoGame.startNewDemo(function(gameId){
+          socket.emit("sendNewDemo", gameId);
+      });
   });
 });
 
