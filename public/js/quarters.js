@@ -19,7 +19,7 @@ var quarters = {
         tournamentPoints.anchor.set(0); */
         
         // Change Game States
-        soloDemoButton = game.add.button(game.world._width * 0.5, game.world._height * 0.3, 'soloDemoButton', this.startNewDemo);
+        soloDemoButton = game.add.button(game.world._width * 0.5, game.world._height * 0.3, 'soloDemoButton', this.checkDemo);
         
         collection = game.add.text(game.world._width * 0.5, game.world._height * 0.4, "collection", style);
         collection.inputEnabled = true;
@@ -27,15 +27,34 @@ var quarters = {
     },
     
     update: function () {
-        this.changeStates(collection, "collection");
+        quartersState.changeStates(collection, "collection");
+    },
+    
+    checkDemo: function () {
+        
+        // first we must check if there is an existing demo to join
+        socket.emit("demoCheck");
+        socket.on("noGames", function(){
+            quartersState.startNewDemo();
+        });
+        socket.on("joinGame", function(gameId){
+            // Assign player to that game
+            document.cookie = "gameId=" + gameId;
+            // add 1 player to the game
+            socket.emit("updatePlayers", {"id": gameId, "pl": 2});
+            document.cookie = "playerNumber=2";
+            // Start the game
+            game.state.start("solo");
+        });
     },
     
     startNewDemo: function() {
-        // give player a number 1 or 2 (assign in cookie)
-        var playerNumber = Math.round(Math.random() + 1);
-        document.cookie = "playerNumber=" + playerNumber.toString();
+        
+        // First player in game gets player 1 (no advantage)
+        document.cookie = "playerNumber=1";
+        
         // start a new game and get game id (assign in cookie)
-        socket.emit("startNewDemo", playerNumber);
+        socket.emit("startNewDemo");
         socket.on("sendNewDemo", function(gameId){
             document.cookie = "gameId=" + gameId;
             //change game states to solo
@@ -53,6 +72,6 @@ var quarters = {
         if (text.input.pointerDown()) {
             game.state.start(state);
         }
-    }
+    },
 
 };

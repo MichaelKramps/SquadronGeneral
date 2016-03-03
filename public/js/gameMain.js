@@ -2,9 +2,9 @@ var game = new Phaser.Game("100", "100", Phaser.AUTO, '');
 
 // Add game states
 
-game.state.add('quarters', quarters);
-game.state.add('solo', solo);
-game.state.add('collection', collection);
+var quartersState = game.state.add('quarters', quarters);
+var soloState = game.state.add('solo', solo);
+var collectionState = game.state.add('collection', collection);
 
 // open web socket for player
 var socket = io.connect();

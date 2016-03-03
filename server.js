@@ -101,7 +101,7 @@ io.on('connection', function (socket) {
                       socket.emit("registerMessage", ["An account already exists with that email"]);
                   } else {
                       mongoPlayer.createNewAccount(data);
-                      socket.emit("registerMessage", ["You registered successfully, you may now log in."]);
+                      socket.emit("registerMessage", ["You registered successfully. You may now log in."]);
                       socket.emit("registerSuccess")
                   }
               });
@@ -121,13 +121,103 @@ io.on('connection', function (socket) {
       });
   });
   // get card set info
+  
   socket.on("getCardSetInfo", function() {
       socket.emit("sendCardSetInfo", coreSet);
   });
   // socket game functions
-    socket.on("startNewDemo", function(playerNumber){
+  
+  socket.on("demoCheck", function(){
+      mongoGame.findOpenGame(function(id){
+          if (id === 0) {
+              socket.emit("noGames");
+          } else {
+              socket.emit("joinGame", id);
+          }
+      });
+  });
+  
+  socket.on("startNewDemo", function(){
       mongoGame.startNewDemo(function(gameId){
           socket.emit("sendNewDemo", gameId);
+      });
+  });
+  
+  socket.on("updatePlayers", function(updateObject){
+      mongoGame.updatePlayers(updateObject);
+  });
+  
+  socket.on("getGameItem", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendGameItem", gameItem);
+      });
+  });
+  
+  // Socket grab game items
+  
+  socket.on("getNumberPlayers", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendNumberPlayers", gameItem);
+      });
+  });
+  
+  socket.on("getAttackOrder", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendAttackOrder", gameItem);
+      });
+  });
+  
+  socket.on("getGamePhase", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendGamePhase", gameItem);
+      });
+  });
+  
+  socket.on("getShipIntegrity", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendShipIntegrity", gameItem);
+      });
+  });
+  
+  socket.on("getShipShield", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendShipShield", gameItem);
+      });
+  });
+  
+  socket.on("getShipProductivity", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendShipProductivity", gameItem);
+      });
+  });
+  
+  socket.on("getSpecialWeapon", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendSpecialWeapon", gameItem);
+      });
+  });
+  
+  socket.on("getGridDimensions", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendGridDimensions", gameItem);
+      });
+  });
+  
+  socket.on("getGridLights", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendGridLights", gameItem);
+      });
+  });
+  
+  socket.on("getControlGrid", function(itemArray){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGameItem(itemArray[0], itemArray[1], function(gameItem){
+          socket.emit("sendControlGrid", gameItem);
+      });
+  });
+  
+  socket.on("getBattlefieldStates", function(gameId){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getBattlefieldStates(gameId, function(gameItem){
+          socket.emit("sendBattlefieldStates", gameItem);
       });
   });
 });
