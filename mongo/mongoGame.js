@@ -3,6 +3,7 @@ var exports = module.exports = {};
 /****** requires ******/
 
 var mongoose = require('mongoose');
+var coreSet = require('../cards/coreSet.js');
 
 /***** connect to db *****/
 
@@ -28,8 +29,8 @@ var gameStateSchema = mongoose.Schema({
     "e2": [Number], // list of lit up grid tiles for p2
     "c1": [{id: Number, c: [Number], u: Number}], // controls setup for p1: id, array of panels that cards takes up, and # of uses for that card
     "c2": [{id: Number, c: [Number], u: Number}], // controls setup for p2
-    "b1": [{id: Number, e:[{id: Number, v: Number}]}],// player 1's board (battlefield) state, each card is an object with id and an array of effects (objects)
-    "b2": [{id: Number, e:[{id: Number, v: Number}]}]// player 2's board (battlefield) state
+    "b1": [{id: Number, s: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}],// player 1's board (battlefield) state, each card is an object with id, speed, defenseCurrent, attackPower, attackType and an array of effects (objects)
+    "b2": [{id: Number, s: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}]// player 2's board (battlefield) state
 });
 
 var demoGameModel = dbGames.model("games", gameStateSchema);
@@ -46,7 +47,7 @@ exports.startNewDemo = function(callback){
         "s1": 20, // Shield on player 1's mother ship
         "s2": 20, // Shield on player 2's mother ship
         "pr1": 2, // player 1's productivity (energy per turn)
-        "pr2": 2, // player 2's productivity
+        "pr2": 5, // player 2's productivity
         "sp1": [1], // special card(s) for p1
         "sp2": [2], // special card(s) for p2
         "g1": [2, 5], // grid layout for p1 (2x5)
@@ -79,16 +80,155 @@ exports.updatePlayers = function(gameObject) {
 }
 
 exports.getGameItem = function(id, itemKey, callback){
-    gameId = mongoose.Types.ObjectId(id);
+    var gameId = mongoose.Types.ObjectId(id);
     demoGameModel.findOne({_id: gameId}, itemKey, function(err, gameObject){
         callback(gameObject[itemKey]);
     });
 }
 
 exports.getBattlefieldStates = function(id, callback){
-    gameId = mongoose.Types.ObjectId(id);
+    var gameId = mongoose.Types.ObjectId(id);
     demoGameModel.findOne({_id: gameId}, "b1 b2", function(err, gameObject){
-        callback(gameObject[itemKey]);
+        callback(gameObject);
+    });
+}
+
+exports.getGame = function(id, callback){
+    var gameId = mongoose.Types.ObjectId(id);
+    demoGameModel.findOne({_id: gameId}, function(err, gameObject){
+        callback(gameObject);
+    });
+}
+
+// production phase
+
+exports.shuffleArray = function shuffle(array) {
+    
+    var currentIndex = array.length;
+    var temporaryValue;
+    var randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+      }
+
+  return array;
+}
+
+exports.addEnergy = function(lightsArray, numLights, energyProduction){
+    // make array with all panel #'s
+    var allLightsArray = [];
+    for (i = 0; i < numLights; i++) {
+        allLightsArray.push(i + 1);
+    }
+    // randomize the panels
+    var allLightsRandom = exports.shuffleArray(allLightsArray);
+    
+    // light up energyProduction # of panels
+    var energyUsed = 0;
+    var currentIndex = 0;
+    while (energyUsed < energyProduction) {
+        var panelNumber = allLightsRandom[currentIndex];
+        if (lightsArray.indexOf(panelNumber) == -1) {
+            lightsArray.push(panelNumber);
+            energyUsed += 1;
+        }
+        currentIndex += 1;
+    }
+    return lightsArray;
+}
+
+exports.getProduction = function(id, playerNumber, callback){
+    exports.getGame(id, function(gameObject){
+        // set up variables
+        var lightsKey = "e" + playerNumber;
+        var lightsArray = gameObject[lightsKey];
+        var gridArray = gameObject["g" + playerNumber];
+        var numLights = gridArray[0] * gridArray[1];
+        var energyProduction = gameObject["pr" + playerNumber];
+        
+        // add energy to array
+        var newLightsArray = exports.addEnergy(lightsArray, numLights, energyProduction);
+        
+        // set up $set object
+        var set = {$set: {}};
+        set.$set[lightsKey] = newLightsArray;
+        demoGameModel.findOneAndUpdate({_id: gameObject["id"]}, set, {new: true}, function(err, newGameObject){
+            callback(newGameObject);
+        });
+    });
+    
+}
+
+exports.playCard = function(infoObject, callback){
+    exports.getGame(infoObject.gameId, function(gameObject){
+        var playerNumber = infoObject.player;
+        var key = infoObject.cardKey;
+        
+        
+        var controlsArray = gameObject["c" + playerNumber];
+        var lightsArray = gameObject["e" + playerNumber];
+        var battlefieldArray = gameObject["b" + playerNumber];
+        
+        // first check if card is already on battlefield
+        var inPlay = false;
+        for (k = 0; k < battlefieldArray.length; k++) {
+            console.log(k);
+            var currentCard = battlefieldArray[k]
+            if (currentCard.id == key) {
+                inPlay = true;
+            }
+        }
+        
+        if (!inPlay) {
+            var thisCard = {};
+            
+            for (i = 0; i < controlsArray.length; i++) {
+                var currentCard = controlsArray[i];
+                if (currentCard.id == key) {
+                    thisCard = currentCard;
+                }
+            }
+            
+            for (j = 0; j < lightsArray.length; j++) {
+                for (k = 0; k < thisCard.c.length; k++) {
+                    if (lightsArray[j] == thisCard.c[k]) {
+                        thisCard.c.splice(k, 1);
+                    }
+                }
+            }
+            
+            if (thisCard.c.length == 0) {
+                // Prepare to update the game state
+                var cardCoreSet = coreSet[key];
+                var cardObject = {id: key, s: cardCoreSet.s, dc: cardCoreSet.d.c, ap: cardCoreSet.a.p, at: cardCoreSet.a.t, e: []};
+                battlefieldArray.push(cardObject);
+                // build the set object
+                var battlefieldId = "b" + playerNumber;
+                var set = {$set: {}};
+                set.$set[battlefieldId] = battlefieldArray;
+                // update game state
+                demoGameModel.findOneAndUpdate({_id: infoObject.gameId}, set, {new: true}, function(err, newGameObject){
+                    // Then put card in to play
+                    callback(true);
+                });
+            } else {
+                // do nothing / maybe a sound effect
+                callback(false);
+            }
+            
+        } else {
+            callback(false);
+        }
     });
 }
 

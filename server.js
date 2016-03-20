@@ -220,6 +220,37 @@ io.on('connection', function (socket) {
           socket.emit("sendBattlefieldStates", gameItem);
       });
   });
+  socket.on("getGame", function(gameId){ // itemArray is a 2 item array with gameId and the itemKey
+      mongoGame.getGame(gameId, function(gameItem){
+          socket.emit("sendGame", gameItem);
+      });
+  });
+  
+  // join game room and start game
+  
+  socket.on("joinRoom", function(roomId){
+      socket.join(roomId);
+  });
+  
+  socket.on("player2Ready", function(roomId){
+      io.sockets.in(roomId).emit("playersReady");
+  });
+  
+  // Production Phase
+  
+  socket.on("getProduction", function(infoArray) { // takes array [gameId, playerNumber]
+      mongoGame.getProduction(infoArray[0], infoArray[1], function(gameObject){
+          socket.emit("sendProduction", gameObject);
+      });
+  });
+  
+  // playing cards onto the battlefield
+  
+  socket.on("cardPlayable", function(infoObject){
+      mongoGame.playCard(infoObject, function(answer){
+          socket.emit("sendCardPlayable", answer);
+      });
+  });
 });
 
 
