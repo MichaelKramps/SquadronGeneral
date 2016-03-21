@@ -47,7 +47,7 @@ exports.startNewDemo = function(callback){
         "s1": 20, // Shield on player 1's mother ship
         "s2": 20, // Shield on player 2's mother ship
         "pr1": 2, // player 1's productivity (energy per turn)
-        "pr2": 5, // player 2's productivity
+        "pr2": 8, // player 2's productivity
         "sp1": [1], // special card(s) for p1
         "sp2": [2], // special card(s) for p2
         "g1": [2, 5], // grid layout for p1 (2x5)
@@ -182,7 +182,6 @@ exports.playCard = function(infoObject, callback){
         // first check if card is already on battlefield
         var inPlay = false;
         for (k = 0; k < battlefieldArray.length; k++) {
-            console.log(k);
             var currentCard = battlefieldArray[k]
             if (currentCard.id == key) {
                 inPlay = true;
@@ -230,6 +229,17 @@ exports.playCard = function(infoObject, callback){
             callback(false);
         }
     });
+}
+
+exports.targetResolve = function (commandKey, targetKey, targetArray, callback) {
+    // checks
+    // can the card be played (check lights)
+    console.log("commandKey: " + commandKey);
+    console.log("targetKey: " + targetKey);
+    console.log(targetArray);
+    // remove command card from lightsArray
+    
+    // change state of target
 }
 
 

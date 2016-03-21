@@ -6,6 +6,8 @@ var solo = {
     stats: null,
     opponent: null,
     battlefield: null,
+    myBattlefield: null,
+    submitButtons: null,
     //
     
     preload : function () {
@@ -16,6 +18,7 @@ var solo = {
         game.load.image('energyPanel', 'pics/energyPanel.jpg');
         game.load.image('opponentShip', 'pics/x-wing.png');
         game.load.image('opponentShield', 'pics/opponent-shield.png');
+        game.load.image('submitButton', 'pics/submitButton.jpg');
         
         for (i = 1; i < 22; i++) {
             var num = i.toString();
@@ -30,7 +33,9 @@ var solo = {
         soloState.attackOrder = game.add.group();
         soloState.stats = game.add.group();
         soloState.opponent = game.add.group();
-        soloState.battlefield = game.add.group();
+        soloState.oppBattlefield = game.add.group();
+        soloState.myBattlefield = game.add.group();
+        soloState.submitButtons = game.add.group();
         
         var dashboard = game.add.graphics(0, game.world._height * 0.75);
         dashboard.lineStyle(3, 0x1458b7);
@@ -56,8 +61,6 @@ var solo = {
         // draw the initial game state
         
         soloState.drawGrid(gameObject, false, soloState.shrinkGrid(gameObject));
-        soloState.drawEnergy();
-        soloState.drawOpponent();
         //soloState.drawSpecialCards();
         //soloState.drawStats();
         
@@ -68,9 +71,95 @@ var solo = {
         }
         socket.on("playersReady", function(){
             // start game when both players join
-            socket.removeListener("playersReady", soloState.productionPhase());
+            socket.removeListener("playersReady", soloState.preGame());
         });
     },
+    
+    // Game Phases
+    // calls to server should happen in these functions
+    
+    preGame: function () {
+        socket.emit("getGame", soloState.getCookie("gameId"));
+        socket.on("sendGame", function(gameObject){
+            soloState.drawOpponentShip(gameObject);
+            var productionKey = "pr" + soloState.returnPlayerNumber();
+            var playerProduction = gameObject[productionKey];
+            soloState.drawEnergy(playerProduction)
+            socket.removeListener("sendGame", soloState.startOfTurn(gameObject));
+        });
+    },
+    
+    startOfTurn: function (gameObject) {
+        // check SoT event listeners
+        // act on any existing event listeners
+        // start production phase
+        if (!gameObject) {
+            /* socket.emit("getGame", soloState.getCookie("gameId"));
+            socket.on("sendGame", function(gameObject){
+                soloState.drawOpponentShip(gameObject);
+                var productionKey = "pr" + soloState.returnPlayerNumber();
+                var playerProduction = gameObject[productionKey];
+                socket.removeListener("sendGame", soloState.drawEnergy(playerProduction));
+            }); */
+            soloState.productionPhase();
+        } else {
+            soloState.productionPhase();
+        }
+    },
+    
+    productionPhase: function () {
+        // Server adds energy/production to grid
+        socket.emit("getProduction", [soloState.getCookie("gameId"), soloState.returnPlayerNumber()]);
+        socket.on("sendProduction", function (gameObject) {
+            // after production has been added, draw grid and move to main phase
+            socket.removeListener("sendProduction", soloState.mainPhase());
+        });
+    },
+    
+    mainPhase: function () {
+        // Players can now play ships and commands
+        // get game object
+        socket.emit("getGame", soloState.getCookie("gameId"));
+        socket.on("sendGame", function(gameObject){
+            soloState.drawMainButton();
+            socket.removeListener("sendGame", soloState.drawGrid(gameObject, true, soloState.expandGrid(gameObject)));
+        });
+    },
+    
+    battleOrderPhase: function () {
+        socket.emit("getGame", soloState.getCookie("gameId"));
+        socket.on("sendGame", function(gameObject){
+            soloState.drawBattlefield(gameObject);
+            soloState.drawGrid(gameObject, false, soloState.shrinkGrid(gameObject));
+            socket.removeListener("sendGame", console.log("orderAttacks"));
+        });
+    },
+    
+    reinforcePhase: function () {
+        
+    },
+    
+    damageDealtPhase: function () {
+        
+    },
+    
+    endOfTurn: function () {
+        
+    },
+    
+    // submit buttons
+    
+    drawMainButton: function () {
+        var submitButton = new Phaser.Button(game, 50, 50, "submitButton", soloState.mainCallback, this);
+        soloState.submitButtons.add(submitButton);
+    },
+    
+    mainCallback: function (button) {
+        soloState.battleOrderPhase();
+        button.destroy();
+    },
+    
+    // front end functions
     
     drawGrid: function (gameObject, input, callback) {
         
@@ -162,6 +251,8 @@ var solo = {
                                 panelConnect.lineTo(10, 0);
                             }
                         }
+                        
+                        // on mouse over show enlarged picture of card
                         var cardPicture = soloState.grid.create(xCoordinate + 10, yCoordinate, cardId.toString()); // 130 x 195 pixels
                         cardPicture.inputEnabled = true;
                         cardPicture.events.onInputOver.add(soloState.showCard, this);
@@ -231,32 +322,21 @@ var solo = {
         expand.start();
     },
     
-    drawEnergy: function () {
-        socket.emit("getShipProductivity", [soloState.getCookie("gameId"), "pr" + soloState.getCookie("playerNumber")]);
-        socket.on("sendShipProductivity", function(productivity){
-            var circle = game.add.graphics(0, 0);
+    drawEnergy: function (productivity) {
+        var circle = game.add.graphics(0, 0);
 
-            // graphics.lineStyle(2, 0xffd900, 1);
+        // graphics.lineStyle(2, 0xffd900, 1);
 
-            circle.beginFill(0x1458b7, 1);
-            circle.drawCircle(game.world._width * 0.225, game.world._height * 0.93, game.world._height * 0.10);
-            soloState.controls.add(circle);
-            
-            var style = { font: game.world._height * 0.05 + "px Arial", fill: "#ff0044", align: "center" };
-            var production = game.add.text((game.world._width * 0.225) - 10, game.world._height * 0.905, "2", style);
-            socket.removeListener("sendShipProductivity", console.log("Productivity drawn"));
-        });
+        circle.beginFill(0x1458b7, 1);
+        circle.drawCircle(game.world._width * 0.225, game.world._height * 0.93, game.world._height * 0.10);
+        soloState.controls.add(circle);
+        
+        var style = { font: game.world._height * 0.05 + "px Arial", fill: "#ff0044", align: "center" };
+        var production = game.add.text((game.world._width * 0.225) - 10, game.world._height * 0.905, productivity.toString(), style);
     },
     
     drawSpecialCards: function () {
         //console.log("special");
-    },
-    
-    drawOpponent: function () {
-        socket.emit("getGame", soloState.getCookie("gameId"));
-        socket.on("sendGame", function(gameObject){
-            socket.removeListener("sendGame", soloState.drawOpponentShip(gameObject));
-        });
     },
     
     drawOpponentShip: function (gameObject) {
@@ -279,17 +359,11 @@ var solo = {
         var integrity = game.add.text((game.world._width * 0.5) - 15, scale, opponentIntegrity, styleIntegrity);
     },
     
-    startDrawBattlefield: function () {
-        socket.emit("getGame", soloState.getCookie("gameId"));
-        socket.on("sendGame", function(gameObject){
-            socket.removeListener("sendGame", soloState.drawBattlefield(gameObject));
-        });
-    },
-    
     drawBattlefield: function (gameObject) {
         // first clear the battlefield of all ships
         
-        soloState.battlefield.removeAll();
+        soloState.myBattlefield.removeAll();
+        soloState.oppBattlefield.removeAll();
         
         // set scaling variables (cards 130 x 195)
         
@@ -303,8 +377,10 @@ var solo = {
         var yCoordinateOpponent = game.world._height * 0.27;
         
         for (i = 0; i < opponentBattlefield.length; i++) {
+            var currentCard = opponentBattlefield[i];
+            
             var xCoordinate = (((i + 1) / (opponentBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
-            var currentSprite = soloState.battlefield.create(xCoordinate, yCoordinateOpponent, "1");
+            var currentSprite = soloState.oppBattlefield.create(xCoordinate, yCoordinateOpponent, currentCard.id.toString());
             currentSprite.scale.setTo(scale, scale);
             
             // draw stats for that card
@@ -317,10 +393,10 @@ var solo = {
             
             var styleStats = { font: textHeight + "px Arial", fill: "#0000ff", align: "center"};
             var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
-            soloState.battlefield.add(attack);
+            soloState.oppBattlefield.add(attack);
             
             var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
-            soloState.battlefield.add(defense);
+            soloState.oppBattlefield.add(defense);
         }
         
         // then draw my battlefield
@@ -333,7 +409,7 @@ var solo = {
             
             // draw card
             var xCoordinate = (((j + 1) / (playerBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
-            var currentSprite = soloState.battlefield.create(xCoordinate, yCoordinatePlayer, "1");
+            var currentSprite = soloState.myBattlefield.create(xCoordinate, yCoordinatePlayer, currentCard.id.toString());
             currentSprite.scale.setTo(scale, scale);
             
             // draw stats for that card
@@ -346,19 +422,104 @@ var solo = {
             
             var styleStats = { font: textHeight + "px Arial", fill: "#0000ff", align: "center"};
             var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
-            soloState.battlefield.add(attack);
+            soloState.myBattlefield.add(attack);
             
             var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
-            soloState.battlefield.add(defense);
+            soloState.myBattlefield.add(defense);
+        }
+    },
+    
+    startDrawMyBattlefield: function (commandKey, targetCommand) {
+        socket.emit("getGame", soloState.getCookie("gameId"));
+        socket.on("sendGame", function(gameObject){
+            if (targetCommand) {
+                socket.removeListener("sendGame", soloState.drawMyTargets(gameObject, commandKey, targetCommand));
+            } else {
+                socket.removeListener("sendGame", soloState.drawMyBattlefield(gameObject));
+            }
+        });
+    },
+    
+    drawMyBattlefield: function (gameObject) {
+        // first clear the battlefield of all ships
+        
+        soloState.myBattlefield.removeAll();
+        
+        // set scaling variables (cards 130 x 195)
+        
+        var scale = (game.world._height * 0.2) / 195;
+        var cardWidth = 130 * scale;
+        
+        // then draw my battlefield
+        var playerNumber = soloState.returnPlayerNumber();
+        var playerBattlefield = gameObject["b" + playerNumber];
+        var yCoordinatePlayer = game.world._height * 0.52;
+        
+        for (j = 0; j < playerBattlefield.length; j++) {
+            var currentCard = playerBattlefield[j];
+            
+            // draw card
+            var xCoordinate = (((((j + 1) / (playerBattlefield.length + 1)) * game.world._width) - (cardWidth / 2)) / 2) + (game.world._width / 2);
+            var currentSprite = soloState.myBattlefield.create(xCoordinate, yCoordinatePlayer, currentCard.id.toString());
+            currentSprite.scale.setTo(scale, scale);
+            
+            // draw stats for that card
+            var textHeight = (195 * scale) * 0.2;
+            var attackValue = currentCard.ap;
+            var defenseValue = currentCard.dc;
+            var attackX = xCoordinate;
+            var defenseX = xCoordinate + (cardWidth * 0.8);
+            var statsY = (yCoordinatePlayer + (195 * scale)) - textHeight;
+            
+            var styleStats = { font: textHeight + "px Arial", fill: "#0000ff", align: "center"};
+            var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
+            soloState.myBattlefield.add(attack);
+            
+            var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
+            soloState.myBattlefield.add(defense);
         }
         game.world.bringToTop(soloState.grid);
     },
     
-    productionPhase: function () {
-        socket.emit("getProduction", [soloState.getCookie("gameId"), soloState.returnPlayerNumber()]);
-        socket.on("sendProduction", function (gameObject) {
-            socket.removeListener("sendProduction", soloState.drawGrid(gameObject, true, soloState.expandGrid(gameObject)));
-        });
+    drawMyTargets: function (gameObject, commKey, targetCommand) {
+        // first clear the battlefield of all ships
+        
+        soloState.myBattlefield.removeAll();
+        
+        // set scaling variables (cards 130 x 195)
+        
+        var scale = (game.world._height * 0.2) / 195;
+        var cardWidth = 130 * scale;
+        
+        // then draw my battlefield
+        var playerNumber = soloState.returnPlayerNumber();
+        var playerBattlefield = gameObject["b" + playerNumber];
+        var yCoordinatePlayer = game.world._height * 0.52;
+        
+        for (j = 0; j < playerBattlefield.length; j++) {
+            var currentCard = playerBattlefield[j];
+            // draw card
+            var xCoordinate = (((((j + 1) / (playerBattlefield.length + 1)) * game.world._width) - (cardWidth / 2)) / 2) + (game.world._width / 2);
+            var currentSprite = new Phaser.Button(game, xCoordinate, yCoordinatePlayer, currentCard.id.toString(), soloState.targetDeclared, {commandKey: commKey, targetKey: currentCard.id.toString(), e: targetCommand});
+            currentSprite.scale.setTo(scale, scale);
+            soloState.myBattlefield.add(currentSprite);
+            
+            // draw stats for that card
+            var textHeight = (195 * scale) * 0.2;
+            var attackValue = currentCard.ap;
+            var defenseValue = currentCard.dc;
+            var attackX = xCoordinate;
+            var defenseX = xCoordinate + (cardWidth * 0.8);
+            var statsY = (yCoordinatePlayer + (195 * scale)) - textHeight;
+            
+            var styleStats = { font: textHeight + "px Arial", fill: "#0000ff", align: "center"};
+            var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
+            soloState.myBattlefield.add(attack);
+            
+            var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
+            soloState.myBattlefield.add(defense);
+        }
+        game.world.bringToTop(soloState.grid);
     },
     
     attemptPlayCard: function () {
@@ -372,50 +533,78 @@ var solo = {
         var lightsArray = gameObject["e" + playerNumber];
         var battlefieldArray = gameObject["b" + playerNumber];
         
-        // first check if card is already on battlefield
-        var inPlay = false;
-        for (k = 0; k < battlefieldArray; k++) {
-            var currentCard = battlefieldArray[k]
-            if (currentCard.id == key) {
-                inPlay = true;
-            }
-        }
-        if (!inPlay) {
-            var thisCard = {};
-            
-            for (i = 0; i < controlsArray.length; i++) {
-                var currentCard = controlsArray[i];
+        // what type of card is it?
+        
+        var cardObject = coreSet[key];
+        var cardType = cardObject.i.t;
+        
+        if (cardType == 0) {
+            // card is a ship
+            // first check if card is already on battlefield
+            var inPlay = false;
+            for (k = 0; k < battlefieldArray; k++) {
+                var currentCard = battlefieldArray[k]
                 if (currentCard.id == key) {
-                    thisCard = currentCard;
+                    inPlay = true;
                 }
             }
-            
-            for (j = 0; j < lightsArray.length; j++) {
-                for (k = 0; k < thisCard.c.length; k++) {
-                    if (lightsArray[j] == thisCard.c[k]) {
-                        thisCard.c.splice(k, 1);
+            if (!inPlay) {
+                var thisCard = {};
+                
+                for (i = 0; i < controlsArray.length; i++) {
+                    var currentCard = controlsArray[i];
+                    if (currentCard.id == key) {
+                        thisCard = currentCard;
                     }
                 }
-            }
-            
-            if (thisCard.c.length == 0) {
-                // check with database 
-                socket.emit("cardPlayable", {gameId:soloState.getCookie("gameId"), cardKey: key, player: playerNumber});
-                // If OK then change game state
-                socket.on("sendCardPlayable", function(answer){
-                    if (answer) {
-                        soloState.startDrawBattlefield();
-                    } else {
-                        // do nothing / maybe a sound effect
-                        console.log("Card already in play");
+                
+                for (j = 0; j < lightsArray.length; j++) {
+                    for (k = 0; k < thisCard.c.length; k++) {
+                        if (lightsArray[j] == thisCard.c[k]) {
+                            thisCard.c.splice(k, 1);
+                        }
                     }
-                    socket.removeListener("sendCardPlayable", soloState.blank());
-                });
-            } else {
-                // do nothing / maybe a sound effect
-                console.log("card not playable");
+                }
+                
+                if (thisCard.c.length == 0) {
+                    // check with database 
+                    socket.emit("cardPlayable", {gameId:soloState.getCookie("gameId"), cardKey: key, player: playerNumber});
+                    // If OK then change game state
+                    socket.on("sendCardPlayable", function(answer){
+                        if (answer) {
+                            soloState.startDrawMyBattlefield();
+                        } else {
+                            // do nothing / maybe a sound effect
+                            console.log("Card already in play");
+                        }
+                        socket.removeListener("sendCardPlayable", soloState.blank());
+                    });
+                } else {
+                    // do nothing / maybe a sound effect
+                    console.log("card not playable");
+                }
+            }
+        } else if (cardType == 1) { // card is a command
+            // check targeting type (global, target, random)
+            var targetType = cardObject.l;
+            if (targetType == 0) { // global targeting
+                console.log("global target");
+                socket.emit("globalCommand", {commandKey: key, targetArray: cardObject.e});
+            } else if (targetType == 1) { // single target
+                console.log("single target");
+                soloState.startDrawMyBattlefield(key, cardObject.e);
+            } else if (targetType == 2) { // random single target
+                console.log("random single target");
+                socket.emit("randomSingleCommand", {commandKey: key, targetArray: cardObject.e});
             }
         }
+    },
+    
+    targetDeclared: function () {
+        socket.emit("targetDeclared", {ck: this.commandKey, tk: this.targetKey, tc: this.e});
+        //socket.on("targetResolved", function(newGameObject){
+            //soloState.drawMyBattlefield(newGameObject);
+        //});
     },
     
     returnPlayerNumber: function () {

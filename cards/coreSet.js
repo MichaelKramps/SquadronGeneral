@@ -114,36 +114,37 @@ module.exports = {
         s: 6,
         e: [{l: 0, a: [0, []]}]
     },
-    "13": {
-        c: 1,
-        i: {t: 1, s: 0, r: 0, y: 0},
-        a: {s: 0, p: 0, t: 0},
-        d: {c: 0, m: 0, t: 0},
-        s: 0,
-        e: [{l: 0, a: [0, []]}]
+    "13": { // first spell card
+        c: 1, // cost
+        i: { // general info
+            t: 1, // type: command
+            s: 0, // section: mercenaries
+            r: 0, // race: none
+            y: 0 // rarity: common
+            },
+        l: 1, // listener (0: global, 1: target, 2: random)
+        r: 0, // reinforce: off
+        e: [{k: ["a", "p"], u: 2}] // events when target is chosen {key: [array map to card property], upgrade: how to change that property}
     },
     "14": {
         c: 1,
         i: {t: 1, s: 0, r: 0, y: 0},
-        a: {s: 0, p: 0, t: 0},
-        d: {c: 0, m: 0, t: 0},
-        s: 0,
-        e: [{l: 0, a: [0, []]}]
+        l: 0,
+        r: 0,
+        e: [{k: ["a", "p"], u: 2}]
     },
     "15": {
         c: 2,
         i: {t: 1, s: 0, r: 0, y: 1},
-        a: {s: 0, p: 0, t: 0},
-        d: {c: 4, m: 4, t: 0},
-        s: 0,
-        e: [{l: 0, a: [0, []]}]
+        l: 1,
+        r: 0,
+        e: [{k: ["a", "p"], u: 4}, {k: ["d", "c"], u: 4}, {k: ["d", "m"], u: 4}]
     },
     "16": {
         c: 2,
         i: {t: 1, s: 0, r: 0, y: 1},
-        a: {s: 0, p: 0, t: 0},
-        d: {c: 1, m: 1, t: 0},
-        s: 0,
-        e: [{l: 0, a: [0, []]}]
+        l: 1,
+        r: 1, // reinforce: on
+        e: [{k: ["a", "p"], u: 1}, {k: ["d", "c"], u: 1}, {k: ["d", "m"], u: 1}]
     }
 }
