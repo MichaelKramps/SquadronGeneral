@@ -127,8 +127,9 @@ var solo = {
     },
     
     battleOrderPhase: function () {
-        socket.emit("getGame", soloState.getCookie("gameId"));
-        socket.on("sendGame", function(gameObject){
+        socket.emit("battleOrder", soloState.getCookie("gameId"));
+        socket.on("sendBattleOrder", function(gameObject){
+            console.log(gameObject["o"]);
             soloState.drawBattlefield(gameObject);
             soloState.drawGrid(gameObject, false, soloState.shrinkGrid(gameObject));
             socket.removeListener("sendGame", console.log("orderAttacks"));
@@ -136,7 +137,7 @@ var solo = {
     },
     
     reinforcePhase: function () {
-        
+        console.log("reinforce");
     },
     
     damageDealtPhase: function () {
@@ -601,10 +602,11 @@ var solo = {
     },
     
     targetDeclared: function () {
-        socket.emit("targetDeclared", {ck: this.commandKey, tk: this.targetKey, tc: this.e});
-        //socket.on("targetResolved", function(newGameObject){
-            //soloState.drawMyBattlefield(newGameObject);
-        //});
+        socket.emit("targetDeclared", {ck: this.commandKey, tk: this.targetKey, tc: this.e, id: soloState.getCookie("gameId"), pn: soloState.returnPlayerNumber()});
+        socket.on("targetResolve", function(newGameObject){
+            soloState.drawMyBattlefield(newGameObject);
+            soloState.drawGrid(newGameObject, true, soloState.expandGrid(newGameObject));
+        });
     },
     
     returnPlayerNumber: function () {

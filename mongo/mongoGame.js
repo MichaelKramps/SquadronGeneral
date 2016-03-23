@@ -29,8 +29,8 @@ var gameStateSchema = mongoose.Schema({
     "e2": [Number], // list of lit up grid tiles for p2
     "c1": [{id: Number, c: [Number], u: Number}], // controls setup for p1: id, array of panels that cards takes up, and # of uses for that card
     "c2": [{id: Number, c: [Number], u: Number}], // controls setup for p2
-    "b1": [{id: Number, s: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}],// player 1's board (battlefield) state, each card is an object with id, speed, defenseCurrent, attackPower, attackType and an array of effects (objects)
-    "b2": [{id: Number, s: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}]// player 2's board (battlefield) state
+    "b1": [{id: Number, s: Number, dm: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}],// player 1's board (battlefield) state, each card is an object with id, speed, defenseCurrent, attackPower, attackType and an array of effects (objects)
+    "b2": [{id: Number, s: Number, dm: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}]// player 2's board (battlefield) state
 });
 
 var demoGameModel = dbGames.model("games", gameStateSchema);
@@ -209,7 +209,7 @@ exports.playCard = function(infoObject, callback){
             if (thisCard.c.length == 0) {
                 // Prepare to update the game state
                 var cardCoreSet = coreSet[key];
-                var cardObject = {id: key, s: cardCoreSet.s, dc: cardCoreSet.d.c, ap: cardCoreSet.a.p, at: cardCoreSet.a.t, e: []};
+                var cardObject = {id: key, s: cardCoreSet.s, dm: cardCoreSet.d.m, dc: cardCoreSet.d.c, ap: cardCoreSet.a.p, at: cardCoreSet.a.t, e: []};
                 battlefieldArray.push(cardObject);
                 // build the set object
                 var battlefieldId = "b" + playerNumber;
@@ -231,15 +231,143 @@ exports.playCard = function(infoObject, callback){
     });
 }
 
-exports.targetResolve = function (commandKey, targetKey, targetArray, callback) {
+exports.targetResolve = function (gameId, playerNumber, commandKey, targetKey, targetArray, callback) {
     // checks
-    // can the card be played (check lights)
-    console.log("commandKey: " + commandKey);
-    console.log("targetKey: " + targetKey);
-    console.log(targetArray);
-    // remove command card from lightsArray
     
-    // change state of target
+    exports.getGame(gameId, function(gameObject){    
+        
+        var controlsId = "c" + playerNumber;
+        var controlsArray = gameObject[controlsId];
+        var lightsId = "e" + playerNumber;
+        var lightsArray = gameObject[lightsId];
+        var battlefieldId = "b" + playerNumber;
+        var battlefieldArray = gameObject[battlefieldId];
+        
+        // can the card be played (check lights)
+        var thisCommandCard = {};
+        var thisCommandCardCost = [];
+        
+        // get the card object from the control grid array
+        for (i = 0; i < controlsArray.length; i++) {
+            var currentCard = controlsArray[i];
+            if (currentCard.id == commandKey) {
+                thisCommandCard = currentCard;
+            }
+        }
+        
+        // check if the all the lights are lit
+        for (j = 0; j < lightsArray.length; j++) {
+            for (k = 0; k < thisCommandCard.c.length; k++) {
+                if (lightsArray[j] == thisCommandCard.c[k]) {
+                    thisCommandCardCost.push(thisCommandCard.c[k]);
+                    thisCommandCard.c.splice(k, 1);
+                }
+            }
+        }
+        
+        // if the card is playable, change the game state
+        if (thisCommandCard.c.length == 0) {
+            // Put the cost back in thisCommandCard
+            thisCommandCard.c = thisCommandCardCost;
+            
+            // remove lights from lightsArray
+            for (l = 0; l < lightsArray.length; l++) {
+                for (m = 0; m < thisCommandCard.c.length; m++) {
+                    if (lightsArray[l] == thisCommandCard.c[m]) {
+                        lightsArray.splice(l, 1);
+                    }
+                }
+            }
+            
+            // add 1 to # of uses
+            thisCommandCard.u += 1;
+            
+            // create new battlefield state
+            for (n = 0; n < battlefieldArray.length; n++) {
+                thisShip = battlefieldArray[n];
+                if (thisShip.id == targetKey) {
+                    for (p = 0; p < targetArray.length; p++) {
+                        var thisChange = targetArray[p];
+                        var destinationKey = thisChange.k;
+                        // pinpoint attribute to be changed and update
+                        thisShip[destinationKey] += thisChange.u;
+                    }
+                }
+            }
+            // build the set object
+            var battlefieldId = "b" + playerNumber;
+            var set = {$set: {}};
+            set.$set[battlefieldId] = battlefieldArray;
+            set.$set[lightsId] = lightsArray;
+            set.$set[controlsId] = controlsArray;
+            // update game state
+            demoGameModel.findOneAndUpdate({_id: gameId}, set, {new: true}, function(err, newGameObject){
+                // Then put card in to play
+                callback(newGameObject);
+            });
+        } else {
+            // do nothing / maybe a sound effect
+            callback(false);
+        }
+    }); 
+}
+
+exports.battleOrder = function (gameId, callback) {
+    exports.getGame(gameId, function(gameObject){
+        var newBattleOrder = [];
+        var orderArray = [];
+        var battlefield1 = gameObject["b1"];
+        var battlefield2 = gameObject["b2"];
+        
+        // put both battlefields into one array
+        for (i = 0; i < battlefield1.length; i++) {
+            var currentCard = battlefield1[i];
+            var cardObject = {};
+            var cardSpeed = currentCard.s;
+            var roundSpeed = Math.random() * cardSpeed;
+            cardObject.key = currentCard.id;
+            cardObject.s = roundSpeed;
+            orderArray.push(cardObject);
+        }
+        
+        for (j = 0; j < battlefield2.length; j++) {
+            var currentCard = battlefield2[j];
+            var cardObject = {};
+            var cardSpeed = currentCard.s;
+            var roundSpeed = Math.random() * cardSpeed;
+            cardObject.key = currentCard.id;
+            cardObject.s = roundSpeed;
+            orderArray.push(cardObject);
+        }
+        
+        // multiply speeds by random and order cards
+        for (k = 0; k < orderArray.length; k++) {
+            if (k > 0) {
+                var firstCard = orderArray[0];
+                var cardObject = orderArray[k];
+                if (cardObject.s > firstCard.s) {
+                    orderArray.splice(k, 1);
+                    orderArray.unshift(cardObject);
+                }
+            }
+        }
+        
+        // create game order array
+        for (l = 0; l < orderArray.length; l++) {
+            var card = orderArray[l];
+            newBattleOrder.push(card.id);
+        }
+        
+        // update game state
+        var set = {$set: {}};
+        set.$set["o"] = newBattleOrder;
+        // update game state
+        demoGameModel.findOneAndUpdate({_id: gameId}, set, {new: true}, function(err, newGameObject){
+            // Then put card in to play
+            console.log(newGameObject);
+            callback(newGameObject);
+        });
+    });
 }
 
 

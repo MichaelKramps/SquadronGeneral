@@ -201,8 +201,18 @@ io.on('connection', function (socket) {
       var commandKey = infoObject.ck;
       var targetKey = infoObject.tk;
       var targetArray = infoObject.tc;
-      mongoGame.targetResolve(commandKey, targetKey, targetArray, function(newGameObject){
+      var gameId = infoObject.id;
+      var playerNumber = infoObject.pn;
+      mongoGame.targetResolve(gameId, playerNumber, commandKey, targetKey, targetArray, function(newGameObject){
           socket.emit("targetResolve", newGameObject);
+      });
+  });
+  
+  // battle attack order
+  
+  socket.on("battleOrder", function(gameId){
+      mongoGame.battleOrder(gameId, function(gameObject){
+          socket.emit("sendBattleOrder", gameObject);
       });
   });
 });

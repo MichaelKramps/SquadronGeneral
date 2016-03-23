@@ -124,27 +124,27 @@ module.exports = {
             },
         l: 1, // listener (0: global, 1: target, 2: random)
         r: 0, // reinforce: off
-        e: [{k: ["a", "p"], u: 2}] // events when target is chosen {key: [array map to card property], upgrade: how to change that property}
+        e: [{k: "ap", u: 2}] // events when target is chosen {key: [array map to card property], upgrade: how to change that property}
     },
     "14": {
         c: 1,
         i: {t: 1, s: 0, r: 0, y: 0},
         l: 0,
         r: 0,
-        e: [{k: ["a", "p"], u: 2}]
+        e: [{k: "ap", u: 2}]
     },
     "15": {
         c: 2,
         i: {t: 1, s: 0, r: 0, y: 1},
         l: 1,
         r: 0,
-        e: [{k: ["a", "p"], u: 4}, {k: ["d", "c"], u: 4}, {k: ["d", "m"], u: 4}]
+        e: [{k: "ap", u: 4}, {k: "dc", u: 4}, {k: "dm", u: 4}]
     },
     "16": {
         c: 2,
         i: {t: 1, s: 0, r: 0, y: 1},
         l: 1,
         r: 1, // reinforce: on
-        e: [{k: ["a", "p"], u: 1}, {k: ["d", "c"], u: 1}, {k: ["d", "m"], u: 1}]
+        e: [{k: "ap", u: 1}, {k: "dc", u: 1}, {k: "dm", u: 1}]
     }
 }
