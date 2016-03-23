@@ -355,7 +355,7 @@ exports.battleOrder = function (gameId, callback) {
         // create game order array
         for (l = 0; l < orderArray.length; l++) {
             var card = orderArray[l];
-            newBattleOrder.push(card.id);
+            newBattleOrder.push(card.key);
         }
         
         // update game state
@@ -364,7 +364,6 @@ exports.battleOrder = function (gameId, callback) {
         // update game state
         demoGameModel.findOneAndUpdate({_id: gameId}, set, {new: true}, function(err, newGameObject){
             // Then put card in to play
-            console.log(newGameObject);
             callback(newGameObject);
         });
     });
