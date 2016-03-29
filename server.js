@@ -177,7 +177,8 @@ io.on('connection', function (socket) {
       socket.join(roomId);
   });
   
-  socket.on("player2Ready", function(roomId){
+  socket.on("player2Ready", function(roomId){ // roomId is the gameId
+      mongoGame.setPlayersZero(roomId);
       io.sockets.in(roomId).emit("playersReady");
   });
   
@@ -208,11 +209,17 @@ io.on('connection', function (socket) {
       });
   });
   
+  socket.on("mainPhaseCompleted", function(gameId){
+      mongoGame.mainPhaseCompleted(gameId, function(numPlayers){
+          socket.emit("sendMainPhaseCompleted", numPlayers);
+      });
+  });
+  
   // battle attack order
   
   socket.on("battleOrder", function(gameId){
       mongoGame.battleOrder(gameId, function(gameObject){
-          socket.emit("sendBattleOrder", gameObject);
+          io.sockets.in(gameId).emit("sendBattleOrder", gameObject);
       });
   });
 });

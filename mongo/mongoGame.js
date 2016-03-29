@@ -29,8 +29,8 @@ var gameStateSchema = mongoose.Schema({
     "e2": [Number], // list of lit up grid tiles for p2
     "c1": [{id: Number, c: [Number], u: Number}], // controls setup for p1: id, array of panels that cards takes up, and # of uses for that card
     "c2": [{id: Number, c: [Number], u: Number}], // controls setup for p2
-    "b1": [{id: Number, s: Number, dm: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}],// player 1's board (battlefield) state, each card is an object with id, speed, defenseCurrent, attackPower, attackType and an array of effects (objects)
-    "b2": [{id: Number, s: Number, dm: Number, dc: Number, ap: Number, at: Number, e:[{id: Number, v: Number}]}]// player 2's board (battlefield) state
+    "b1": [{id: Number, s: Number, dm: Number, dc: Number, ap: Number, at: Number, t: Number, e:[{id: Number, v: Number}]}],// player 1's board (battlefield) state, each card is an object with id, speed, defenseCurrent, attackPower, attackType, target(for battle phase) and an array of effects (objects)
+    "b2": [{id: Number, s: Number, dm: Number, dc: Number, ap: Number, at: Number, t: Number, e:[{id: Number, v: Number}]}]// player 2's board (battlefield) state
 });
 
 var demoGameModel = dbGames.model("games", gameStateSchema);
@@ -46,7 +46,7 @@ exports.startNewDemo = function(callback){
         "i2": 20, // Integrity of player 2's mother ship
         "s1": 20, // Shield on player 1's mother ship
         "s2": 20, // Shield on player 2's mother ship
-        "pr1": 2, // player 1's productivity (energy per turn)
+        "pr1": 8, // player 1's productivity (energy per turn)
         "pr2": 8, // player 2's productivity
         "sp1": [1], // special card(s) for p1
         "sp2": [2], // special card(s) for p2
@@ -77,6 +77,11 @@ exports.findOpenGame = function(callback){
 
 exports.updatePlayers = function(gameObject) {
     demoGameModel.update({_id: gameObject["id"]}, {$set: {"pl": gameObject["pl"]}}, function(){});
+}
+
+exports.setPlayersZero = function(gameId) {
+    var id = mongoose.Types.ObjectId(gameId);
+    demoGameModel.findOneAndUpdate({_id: id}, {$set: {"pl": 0}}, function(){});
 }
 
 exports.getGameItem = function(id, itemKey, callback){
@@ -312,6 +317,13 @@ exports.targetResolve = function (gameId, playerNumber, commandKey, targetKey, t
     }); 
 }
 
+exports.mainPhaseCompleted = function (id, callback) {
+    var gameId = mongoose.Types.ObjectId(id);
+    demoGameModel.findOneAndUpdate({_id: gameId}, {$inc: {"pl": 1}}, {new: true}, function(err, newGameObject){
+        callback(newGameObject["pl"]);
+    });
+}
+
 exports.battleOrder = function (gameId, callback) {
     exports.getGame(gameId, function(gameObject){
         var newBattleOrder = [];
@@ -325,7 +337,7 @@ exports.battleOrder = function (gameId, callback) {
             var cardObject = {};
             var cardSpeed = currentCard.s;
             var roundSpeed = Math.random() * cardSpeed;
-            cardObject.key = currentCard.id;
+            cardObject.key = currentCard.id + "1";
             cardObject.s = roundSpeed;
             orderArray.push(cardObject);
         }
@@ -335,22 +347,13 @@ exports.battleOrder = function (gameId, callback) {
             var cardObject = {};
             var cardSpeed = currentCard.s;
             var roundSpeed = Math.random() * cardSpeed;
-            cardObject.key = currentCard.id;
+            cardObject.key = currentCard.id + "2";
             cardObject.s = roundSpeed;
             orderArray.push(cardObject);
         }
         
-        // multiply speeds by random and order cards
-        for (k = 0; k < orderArray.length; k++) {
-            if (k > 0) {
-                var firstCard = orderArray[0];
-                var cardObject = orderArray[k];
-                if (cardObject.s > firstCard.s) {
-                    orderArray.splice(k, 1);
-                    orderArray.unshift(cardObject);
-                }
-            }
-        }
+        // order cards by speed
+        orderArray.sort(function(a,b){return b.s - a.s});
         
         // create game order array
         for (l = 0; l < orderArray.length; l++) {
