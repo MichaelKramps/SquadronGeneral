@@ -156,7 +156,9 @@ var solo = {
     },
     
     endOfTurn: function () {
-        
+        // act on EoT listeners
+        // reset necessary game states
+        // reset attack targets on battlefield
     },
     
     // submit buttons
@@ -640,6 +642,7 @@ var solo = {
     },
     
     drawAttackBattlefield: function (gameObject) {
+    
         // first clear the battlefield of all ships
         
         soloState.myBattlefield.removeAll();
@@ -653,8 +656,6 @@ var solo = {
         var attackOrderArray = gameObject["o"];
         var playerNumber = soloState.returnPlayerNumber();
         var opponentNumber = soloState.returnOpponentNumber();
-        
-        console.log(attackOrderArray);
         
         // Then redraw battlefield
         // start with opponent's battlefield
@@ -676,12 +677,10 @@ var solo = {
             var orderValue = 0;
             // need to set speed value
             for (k = 0; k < attackOrderArray.length; k++) {
-                console.log("orderArrayKey: " + attackOrderArray[k] + " | cardId: " + currentCard.id + opponentNumber);
                 if (attackOrderArray[k] == currentCard.id + opponentNumber) {
                     orderValue = k + 1;
                 }
             }
-            console.log("opp: " + orderValue);
             var attackX = xCoordinate;
             var defenseX = xCoordinate + (cardWidth * 0.8);
             var statsY = (yCoordinateOpponent + (195 * scale)) - textHeight;
@@ -696,7 +695,7 @@ var solo = {
             soloState.oppBattlefield.add(defense);
             
             var order = new Phaser.Text(game, orderX, orderY, orderValue, styleStats);
-            soloState.myBattlefield.add(order);
+            soloState.oppBattlefield.add(order);
         }
         
         
@@ -719,12 +718,11 @@ var solo = {
             var orderValue = 0;
             // need to set speed value
             for (l = 0; l < attackOrderArray.length; l++) {
-                console.log("orderArrayKey: " + attackOrderArray[l] + " | cardId: " + currentCard.id + playerNumber);
                 if (attackOrderArray[l] == currentCard.id + playerNumber) {
                     orderValue = l + 1;
                 }
             }
-            console.log("my: " + orderValue);
+            
             var attackX = xCoordinate;
             var defenseX = xCoordinate + (cardWidth * 0.8);
             var statsY = (yCoordinatePlayer + (195 * scale)) - textHeight;
@@ -746,46 +744,73 @@ var solo = {
     
     drawAttackTargets: function () {
         
-        var attackerKey = this.shipKey;
+        var attKey = this.shipKey;
         var gameObject = this.game;
+        
+        var opponentNumber = soloState.returnOpponentNumber();
         // first clear the battlefield of all ships
         
         soloState.oppBattlefield.removeAll();
         
-        // set scaling variables (cards 130 x 195)
+        // start with opponent's battlefield
+        var opponentBattlefield = gameObject["b" + opponentNumber];
+        var yCoordinateOpponent = game.world._height * 0.27;
         
         var scale = (game.world._height * 0.2) / 195;
         var cardWidth = 130 * scale;
         
-        // then draw my battlefield
-        var playerNumber = soloState.returnPlayerNumber();
-        var playerBattlefield = gameObject["b" + playerNumber];
-        var yCoordinatePlayer = game.world._height * 0.52;
-        
-        for (j = 0; j < playerBattlefield.length; j++) {
-            var currentCard = playerBattlefield[j];
-            // draw card
-            var xCoordinate = (((((j + 1) / (playerBattlefield.length + 1)) * game.world._width) - (cardWidth / 2)) / 2) + (game.world._width / 2);
-            var currentSprite = new Phaser.Button(game, xCoordinate, yCoordinatePlayer, currentCard.id.toString() + "b", soloState.targetDeclared, {commandKey: commKey, targetKey: currentCard.id.toString(), e: targetCommand});
+        for (i = 0; i < opponentBattlefield.length; i++) {
+            var currentCard = opponentBattlefield[i];
+            
+            var xCoordinate = (((i + 1) / (opponentBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
+            var cardName = currentCard.id.toString() + "b";
+            var currentSprite = new Phaser.Button(game, xCoordinate, yCoordinateOpponent, currentCard.id.toString() + "b", soloState.declareAttackTarget, {attackerKey: attKey, targetKey: currentCard.id});
             currentSprite.scale.setTo(scale, scale);
-            soloState.myBattlefield.add(currentSprite);
+            soloState.oppBattlefield.add(currentSprite);
             
             // draw stats for that card
             var textHeight = (195 * scale) * 0.2;
             var attackValue = currentCard.ap;
             var defenseValue = currentCard.dc;
+            var orderValue = 0;
+            // need to set speed value
+            var attackOrderArray = gameObject["o"];
+            for (k = 0; k < attackOrderArray.length; k++) {
+                if (attackOrderArray[k] == currentCard.id + opponentNumber) {
+                    orderValue = k + 1;
+                }
+            }
             var attackX = xCoordinate;
             var defenseX = xCoordinate + (cardWidth * 0.8);
-            var statsY = (yCoordinatePlayer + (195 * scale)) - textHeight;
+            var statsY = (yCoordinateOpponent + (195 * scale)) - textHeight;
+            var orderX = xCoordinate + (195 * scale / 2);
+            var orderY = yCoordinateOpponent;
             
             var styleStats = { font: textHeight + "px Arial", fill: "#ffff00", align: "center"};
             var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
-            soloState.myBattlefield.add(attack);
+            soloState.oppBattlefield.add(attack);
             
             var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
-            soloState.myBattlefield.add(defense);
+            soloState.oppBattlefield.add(defense);
+            
+            var order = new Phaser.Text(game, orderX, orderY, orderValue, styleStats);
+            soloState.oppBattlefield.add(order);
         }
-        game.world.bringToTop(soloState.grid);
+    },
+    
+    declareAttackTarget: function () {
+        var attacker = this.attackerKey;
+        var target = this.targetKey;
+        var playerNumber = soloState.returnPlayerNumber();
+        var oppNumber = soloState.returnOpponentNumber();
+        console.log("ship " + attacker + " will attack ship " + target);
+        // make socket call to update game state
+        socket.emit("declareAttackTarget", {attKey: attacker + playerNumber, targetKey: target + oppNumber, pNumber: playerNumber, gameId: soloState.getCookie("gameId")});
+        socket.on("sendAttackTarget", function(newGameObject){
+            // draw attack battlefield with new game object
+            console.log(newGameObject);
+            soloState.drawAttackBattlefield(newGameObject);
+        }); 
     },
     
     returnPlayerNumber: function () {

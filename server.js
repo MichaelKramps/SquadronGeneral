@@ -222,6 +222,18 @@ io.on('connection', function (socket) {
           io.sockets.in(gameId).emit("sendBattleOrder", gameObject);
       });
   });
+  
+  // declare attacker targets
+  
+  socket.on("declareAttackTarget", function(infoObject){
+      var attackerKey = infoObject.attKey;
+      var targetKey = infoObject.targetKey;
+      var playerNumber = infoObject.pNumber;
+      var gameId = infoObject.gameId;
+      mongoGame.declareAttackTarget(attackerKey, targetKey, playerNumber, gameId, function(newGameObject){
+          socket.emit("sendAttackTarget", newGameObject);
+      });
+  });
 });
 
 
