@@ -214,7 +214,7 @@ exports.playCard = function(infoObject, callback){
             if (thisCard.c.length == 0) {
                 // Prepare to update the game state
                 var cardCoreSet = coreSet[key];
-                var cardObject = {id: key, s: cardCoreSet.s, dm: cardCoreSet.d.m, dc: cardCoreSet.d.c, ap: cardCoreSet.a.p, at: cardCoreSet.a.t, t: 0, e: []};
+                var cardObject = {id: key, s: cardCoreSet.s, dm: cardCoreSet.d.m, dc: cardCoreSet.d.c, ap: cardCoreSet.a.p, at: cardCoreSet.a.t, t: -2, e: []};
                 battlefieldArray.push(cardObject);
                 // build the set object
                 var battlefieldId = "b" + playerNumber;
@@ -375,20 +375,18 @@ exports.battleOrder = function (gameId, callback) {
 exports.declareAttackTarget = function (attackerKey, targetKey, playerNumber, gameId, callback) {
     // {id: Number, s: Number, dm: Number, dc: Number, ap: Number, at: Number, t: Number, e:[{id: Number, v: Number}]}
     exports.getGame(gameId, function(gameObject){
-        var newBattlefield = [];
-        var targKey = targetKey.charAt(0);
-        var attKey = attackerKey.charAt(0);
+        var newBattlefield = [];;
+        var attKey = Math.floor(attackerKey / 10);
         var battlefield = gameObject["b" + playerNumber];
         for(i = 0; i < battlefield.length; i++) {
             currentCard = battlefield[i];
             if (currentCard.id == attKey) {
-                currentCard.t = targKey;
+                currentCard.t = targetKey;
                 newBattlefield.push(currentCard);
             } else {
                 newBattlefield.push(currentCard);
             }
         }
-        console.log(newBattlefield);
         
         var set = {$set: {}};
         set.$set["b" + playerNumber] = newBattlefield;

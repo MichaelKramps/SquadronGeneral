@@ -8,6 +8,7 @@ var solo = {
     myBattlefield: null,
     oppBattlefield: null,
     submitButtons: null,
+    battlefieldTargets: null,
     //
     
     preload : function () {
@@ -41,6 +42,7 @@ var solo = {
         soloState.oppBattlefield = game.add.group();
         soloState.myBattlefield = game.add.group();
         soloState.submitButtons = game.add.group();
+        soloState.battlefieldTargets = game.add.group();
         
         var dashboard = game.add.graphics(0, game.world._height * 0.75);
         dashboard.lineStyle(3, 0x1458b7);
@@ -380,14 +382,16 @@ var solo = {
             var opponentShieldPicture = soloState.opponent.create((game.world._width * 0.5) - (300 * scale), 0, "opponentShield");
             opponentShieldPicture.scale.setTo(scale, scale);
             var styleShield = { font: game.world._height * 0.05 + "px Arial", fill: "#660033", align: "center"};
-            var shield = game.add.text((game.world._width * 0.5) - 15, 156 * scale, opponentShield, styleShield);
+            var shield = new Phaser.Text(game, (game.world._width * 0.5) - 15, 156 * scale, opponentShield, styleShield);
+            soloState.opponent.add(shield);
         }
         
         var opponentPicture = soloState.opponent.create((game.world._width * 0.5) - (263 * scale), 0, "opponentShip");
         opponentPicture.scale.setTo(scale, scale);
         
         var styleIntegrity = { font: game.world._height * 0.05 + "px Arial", fill: "#ffff66", align: "center"};
-        var integrity = game.add.text((game.world._width * 0.5) - 15, scale, opponentIntegrity, styleIntegrity);
+        var integrity = new Phaser.Text(game, (game.world._width * 0.5) - 15, scale, opponentIntegrity, styleIntegrity);
+        soloState.opponent.add(integrity);
     },
     
     drawBattlefield: function (gameObject) {
@@ -647,6 +651,7 @@ var solo = {
         
         soloState.myBattlefield.removeAll();
         soloState.oppBattlefield.removeAll();
+        soloState.battlefieldTargets.removeAll();
         
         // set scaling variables (cards 130 x 195)
         
@@ -658,6 +663,10 @@ var solo = {
         var opponentNumber = soloState.returnOpponentNumber();
         
         // Then redraw battlefield
+        
+        // First draw opponent prime ship
+        
+        
         // start with opponent's battlefield
         var opponentBattlefield = gameObject["b" + opponentNumber];
         var yCoordinateOpponent = game.world._height * 0.27;
@@ -696,6 +705,8 @@ var solo = {
             
             var order = new Phaser.Text(game, orderX, orderY, orderValue, styleStats);
             soloState.oppBattlefield.add(order);
+            
+            
         }
         
         
@@ -738,6 +749,27 @@ var solo = {
             
             var order = new Phaser.Text(game, orderX, orderY, orderValue, styleStats);
             soloState.myBattlefield.add(order);
+            
+            // if target declared draw line to target
+            if (currentCard.t != -2) {
+                if (currentCard.t == -1) {
+                    var myX = xCoordinate + (130 * scale / 2);
+                
+                    var laser = game.add.graphics(myX, yCoordinatePlayer);
+                    laser.lineStyle(3, 0xFF0000);
+                    laser.lineTo(game.world._width / 2 - myX, 60 - yCoordinatePlayer);
+                    soloState.battlefieldTargets.add(laser);
+                } else {
+                    var myX = xCoordinate + (130 * scale / 2);
+                    
+                    var laser = game.add.graphics(myX, yCoordinatePlayer);
+                    laser.lineStyle(3, 0xFF0000);
+                    var i = currentCard.t;
+                    var xCoordinateOpponent = (((i + 1) / (opponentBattlefield.length + 1)) * game.world._width);
+                    laser.lineTo(xCoordinateOpponent - myX, yCoordinateOpponent - yCoordinatePlayer + 60);
+                    soloState.battlefieldTargets.add(laser);
+                }
+            }
         }
         game.world.bringToTop(soloState.grid);
     },
@@ -748,11 +780,37 @@ var solo = {
         var gameObject = this.game;
         
         var opponentNumber = soloState.returnOpponentNumber();
-        // first clear the battlefield of all ships
+        // first clear the battlefield of all ships and opponent's prime ship
         
+        soloState.opponent.removeAll();
         soloState.oppBattlefield.removeAll();
         
-        // start with opponent's battlefield
+        // redraw opponent's ships as buttons
+        // start with prime ship
+        
+        var opponentShield = gameObject["s" + opponentNumber];
+        var opponentIntegrity = gameObject["i" + opponentNumber];
+        var scalePrime = (game.world._height * 0.2) / 208;
+        
+        if (opponentShield > 0) {
+            var opponentShieldPicture = new Phaser.Button(game, (game.world._width * 0.5) - (300 * scalePrime), 0, "opponentShield", soloState.declareAttackTarget, {attackerKey: attKey, targetKey: -1});
+            opponentShieldPicture.scale.setTo(scalePrime, scalePrime);
+            soloState.opponent.add(opponentShieldPicture);
+            
+            var styleShield = { font: game.world._height * 0.05 + "px Arial", fill: "#660033", align: "center"};
+            var shield = new Phaser.Text(game, (game.world._width * 0.5) - 15, 156 * scalePrime, opponentShield, styleShield);
+            soloState.opponent.add(shield);
+        }
+        
+        var opponentPicture = new Phaser.Button(game, (game.world._width * 0.5) - (263 * scalePrime), 0, "opponentShip", soloState.declareAttackTarget, {attackerKey: attKey, targetKey: -1});
+        opponentPicture.scale.setTo(scalePrime, scalePrime);
+        soloState.opponent.add(opponentPicture);
+        
+        var styleIntegrity = { font: game.world._height * 0.05 + "px Arial", fill: "#ffff66", align: "center"};
+        var integrity = new Phaser.Text(game, (game.world._width * 0.5) - 15, scalePrime, opponentIntegrity, styleIntegrity);
+        soloState.opponent.add(integrity);
+        
+        // then draw squad ships
         var opponentBattlefield = gameObject["b" + opponentNumber];
         var yCoordinateOpponent = game.world._height * 0.27;
         
@@ -764,7 +822,7 @@ var solo = {
             
             var xCoordinate = (((i + 1) / (opponentBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
             var cardName = currentCard.id.toString() + "b";
-            var currentSprite = new Phaser.Button(game, xCoordinate, yCoordinateOpponent, currentCard.id.toString() + "b", soloState.declareAttackTarget, {attackerKey: attKey, targetKey: currentCard.id});
+            var currentSprite = new Phaser.Button(game, xCoordinate, yCoordinateOpponent, currentCard.id.toString() + "b", soloState.declareAttackTarget, {attackerKey: attKey, targetKey: i});
             currentSprite.scale.setTo(scale, scale);
             soloState.oppBattlefield.add(currentSprite);
             
@@ -802,13 +860,10 @@ var solo = {
         var attacker = this.attackerKey;
         var target = this.targetKey;
         var playerNumber = soloState.returnPlayerNumber();
-        var oppNumber = soloState.returnOpponentNumber();
-        console.log("ship " + attacker + " will attack ship " + target);
         // make socket call to update game state
-        socket.emit("declareAttackTarget", {attKey: attacker + playerNumber, targetKey: target + oppNumber, pNumber: playerNumber, gameId: soloState.getCookie("gameId")});
+        socket.emit("declareAttackTarget", {attKey: attacker + playerNumber, targetKey: target, pNumber: playerNumber, gameId: soloState.getCookie("gameId")});
         socket.on("sendAttackTarget", function(newGameObject){
             // draw attack battlefield with new game object
-            console.log(newGameObject);
             soloState.drawAttackBattlefield(newGameObject);
         }); 
     },
