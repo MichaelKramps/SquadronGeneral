@@ -234,6 +234,20 @@ io.on('connection', function (socket) {
           socket.emit("sendAttackTarget", newGameObject);
       });
   });
+  
+  socket.on("attackPhaseCompleted", function(gameId){
+      mongoGame.attackPhaseCompleted(gameId, function(numPlayers){
+          socket.emit("sendAttackPhaseCompleted", numPlayers);
+      });
+  });
+  
+  // deal attack phase damage
+  
+  socket.on("dealDamagePhase", function (gameId) {
+      mongoGame.dealDamagePhase(gameId, function(gameObject){
+          io.sockets.in(gameId).emit("sendDealDamagePhase", gameObject);
+      });
+  });
 });
 
 

@@ -20,6 +20,7 @@ var solo = {
         game.load.image('opponentShip', 'pics/x-wing.png');
         game.load.image('opponentShield', 'pics/opponent-shield.png');
         game.load.image('submitButton', 'pics/submitButton.jpg');
+        game.load.image("laser", "pics/laser.png");
         
         for (i = 1; i < 17; i++) {
             var num = i.toString();
@@ -138,13 +139,14 @@ var solo = {
             socket.emit("battleOrder", soloState.getCookie("gameId"));
         }
         socket.on("sendBattleOrder", function(gameObject){
+            soloState.drawAttackButton();
             soloState.drawAttackBattlefield(gameObject);
             soloState.drawGrid(gameObject, false, soloState.shrinkGrid(gameObject));
-            socket.removeListener("sendGame", console.log("orderAttacks"));
+            socket.removeListener("sendGame", soloState.blank());
         });
     },
     
-    reinforcePhase: function () {
+    reinforcePhase: function (numPlayers) {
         if (numPlayers == 2) { // if both players have finished their main phase
             console.log("both players ready to reinforce");
         }
@@ -153,8 +155,13 @@ var solo = {
         });
     },
     
-    damageDealtPhase: function () {
-        
+    damageDealtPhase: function (numPlayers) {
+        if (numPlayers == 2) {
+            socket.emit("dealDamagePhase", soloState.getCookie("gameId"));
+        }
+        socket.on("sendDealDamagePhase", function(gameObject){
+            socket.removeListener("sendDealDamagePhase", soloState.redrawDamageBattlefield(gameObject));
+        });
     },
     
     endOfTurn: function () {
@@ -188,7 +195,7 @@ var solo = {
         socket.emit("attackPhaseCompleted", soloState.getCookie("gameId"));
         socket.on("sendAttackPhaseCompleted", function(numPlayers){
             button.destroy();
-            socket.removeListener("sendMainPhaseCompleted", soloState.reinforcePhase(numPlayers))
+            socket.removeListener("sendAttackPhaseCompleted", soloState.damageDealtPhase(numPlayers));
         });
     },
     
@@ -866,6 +873,107 @@ var solo = {
             // draw attack battlefield with new game object
             soloState.drawAttackBattlefield(newGameObject);
         }); 
+    },
+    
+    prepareGraphic: function (gameObject) {
+        var attackOrder = gameObject["o"];
+        var attackerKey = attackOrder[0];
+        var scale = (game.world._height * 0.2) / 195;
+        
+        // get xy coordinates for attacker and target
+        var attackerPlayerNumber = attackerKey % 10;
+        var defenderPlayerNumber = attackerPlayerNumber == 1 ? 2 : 1;
+        var attackerBattlefield = gameObject["b" + attackerPlayerNumber];
+        var defenderBattlefield = gameObject["b" + defenderPlayerNumber];
+        var attackerSprites = null;
+        var defenderSprites = null;
+        if (attackerPlayerNumber == soloState.returnPlayerNumber) {
+            attackerSprites = soloState.myBattlefield.children;
+            defenderSprites = soloState.oppBattlefield.children;
+        } else {
+            attackerSprites = soloState.oppBattlefield.children;
+            defenderSprites = soloState.myBattlefield.children;
+        }
+        var attackerId = Math.floor(attackerKey / 10);
+        var attacker = null;
+        
+        for (i = 0; i < attackerBattlefield.length; i++) {
+            currentCard = attackerBattlefield[i];
+            if (currentCard.id == attackerId) {
+                attacker = currentCard;
+            }
+        }
+        defenderKey = attacker.t;
+        defender = defenderBattlefield[defenderKey];
+        defenderId = defender.id;
+        // loop over attackerSprites to get attacker xy info
+        var attackerX = 0;
+        var attackerY = 0;
+        
+        for (j = 0; j < attackerSprites.length; j++) {
+            currentSprite = attackerSprites[j];
+            if (currentSprite.key == attackerId + "b") {
+                attackerX = currentSprite.x + ((130 * scale) / 2);
+                attackerY = currentSprite.y + ((195 * scale) / 2);
+            }
+        }
+        
+        var defenderX = 0;
+        var defenderY = 0;
+        
+        for (k = 0; k < defenderSprites.length; k++) {
+            currentSprite = defenderSprites[k];
+            if (currentSprite.key == defenderId + "b") {
+                defenderX = currentSprite.x + ((130 * scale) / 2);
+                defenderY = currentSprite.y + ((195 * scale) / 2);
+            }
+        }
+        
+        // fireShotGraphic
+        soloState.fireShotGraphic(attackerX, attackerY, defenderX, defenderY, soloState.blank());
+        
+    },
+    
+    fireShotGraphic: function (attackerX, attackerY, targetX, targetY, callback) {
+        // draw laser starting at attacker
+        var laser = new Sprite(game, attackerX, attackerY, "laser");
+        soloState.battlefieldTargets.add(laser);
+        
+        
+        // destroy laser and draw explosion
+
+        // callback to server
+    },
+    
+    fireServerCallback: function () {
+        // server changes battlefield and removes first ship from orderArray
+        socket.emit("shipFires", soloState.getCookie("gameId"));
+        socket.on("sendShipFires", function (newGameObject) {
+            socket.removeListener("sendShipFires", soloState.redrawDamageBattlefield(newGameObject));
+        });
+    },
+    
+    redrawDamageBattlefield: function (gameObject) {
+        // remove targets
+        
+        soloState.opponent.removeAll();
+        soloState.battlefieldTargets.removeAll();
+        soloState.myBattlefield.removeAll();
+        soloState.oppBattlefield.removeAll();
+        
+        // draw battlefield w/ prime ships
+        
+        soloState.drawOpponentShip(gameObject);
+        soloState.drawBattlefield(gameObject);
+        
+        // check to see if all attacks are done
+        var attackOrder = gameObject["o"];
+        
+        if (attackOrder.length > 0) {
+            soloState.prepareGraphic(gameObject);
+        } else {
+            soloState.endOfTurn();
+        }
     },
     
     returnPlayerNumber: function () {

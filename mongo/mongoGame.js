@@ -364,6 +364,7 @@ exports.battleOrder = function (gameId, callback) {
         // update game state
         var set = {$set: {}};
         set.$set["o"] = newBattleOrder;
+        set.$set["pl"] = 0;
         // update game state
         demoGameModel.findOneAndUpdate({_id: gameId}, set, {new: true}, function(err, newGameObject){
             // Then put card in to play
@@ -395,6 +396,24 @@ exports.declareAttackTarget = function (attackerKey, targetKey, playerNumber, ga
             // Then put card in to play
             callback(newGameObject);
         });
+    });
+}
+
+exports.attackPhaseCompleted = function (gameId, callback) {
+    var id = mongoose.Types.ObjectId(gameId);
+    demoGameModel.findOneAndUpdate({_id: id}, {$inc: {"pl": 1}}, {new: true}, function(err, newGameObject){
+        callback(newGameObject["pl"]);
+    });
+}
+
+exports.dealDamagePhase = function (gameId, callback) {
+    
+    exports.getGame(gameId, function(gameObject){
+        callback(gameObject);
+        var battlefield1 = gameObject["b1"];
+        var battlefield2 = gameObject["b2"];
+        var battleOrder = gameObject["o"];
+        console.log("still running");
     });
 }
 
