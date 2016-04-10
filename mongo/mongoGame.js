@@ -141,7 +141,8 @@ exports.addEnergy = function(lightsArray, numLights, energyProduction){
     // light up energyProduction # of panels
     var energyUsed = 0;
     var currentIndex = 0;
-    while (energyUsed < energyProduction) {
+    energyProductionFix = numLights - lightsArray.length < energyProduction ? numLights - lightsArray.length : energyProduction;
+    while (energyUsed < energyProductionFix) {
         var panelNumber = allLightsRandom[currentIndex];
         if (lightsArray.indexOf(panelNumber) == -1) {
             lightsArray.push(panelNumber);
@@ -413,9 +414,131 @@ exports.dealDamagePhase = function (gameId, callback) {
         var battlefield1 = gameObject["b1"];
         var battlefield2 = gameObject["b2"];
         var battleOrder = gameObject["o"];
-        console.log("still running");
     });
 }
+
+exports.shipFires = function (gameId, callback) {
+    var id = mongoose.Types.ObjectId(gameId); 
+    exports.getGame(gameId, function(gameObject) {
+        // set current states
+        var attackOrder = gameObject["o"];
+        var attackerKey = attackOrder[0];
+        var attackerPlayer = attackerKey % 10;
+        var targetPlayer = attackerPlayer == 1 ? 2 : 1;
+        var attackerId = Math.floor(attackerKey / 10);
+        var attacker = {};
+        var attackBattlefield = attackerPlayer == 1 ? gameObject["b1"] : gameObject["b2"];
+        for (j = 0; j < attackBattlefield.length; j++) {
+            var currentCard = attackBattlefield[j];
+            if (attackerId == currentCard.id) {
+                attacker = currentCard;
+            }
+        }
+        
+        var targetBattlefield = attackerPlayer == 1 ? gameObject["b2"] : gameObject["b1"];
+        var newTargetBattlefield = [];
+        var destroyedShipOrderId = 0;
+        
+        var primeShield = gameObject["s" + targetPlayer];
+        var primeIntegrity = gameObject["i" + targetPlayer];
+        var newPrimeShield = primeShield;
+        var newPrimeIntegrity = primeIntegrity;
+        
+        var lightsExtinguish = [];
+        
+        if (attacker.t > -1) {
+            for (k = 0; k < targetBattlefield.length; k++) {
+                var currentCard = targetBattlefield[k];
+                if (attacker.t == k) {
+                    var newCard = currentCard;
+                    var newDefense = currentCard.dc - attacker.ap;
+                    newCard.dc = newDefense;
+                    if (newDefense < 1) {
+                        destroyedShipOrderId = "" + currentCard.id + targetPlayer;
+                        destroyedPlayerControls = gameObject["c" + targetPlayer];
+                        for (m = 0; m < destroyedPlayerControls.length; m++) {
+                            var currentControl = destroyedPlayerControls[m];
+                            if (currentControl.id == currentCard.id) {
+                                lightsExtinguish = currentControl.c;
+                            }
+                        }
+                    }
+                    newTargetBattlefield.push(newCard);
+                } else {
+                    newTargetBattlefield.push(currentCard);
+                }
+            }
+        } else if (attacker.t == -1) {
+            // fire on prime ship
+            if (primeShield > 0) {
+                newPrimeShield = primeShield - attacker.ap;
+            } else {
+                newPrimeIntegrity = primeIntegrity - attacker.ap;
+            }
+            
+            if (newPrimeShield < 0) {
+                newPrimeIntegrity = primeIntegrity + newPrimeShield;
+            }
+        } else { 
+            // no target set
+            
+        }
+        
+        
+        var newAttackOrder = [];
+        
+        for (i = 1; i < attackOrder.length; i++) {
+            var currentId = attackOrder[i];
+            // i starts at 1 so we don't push first element in array
+            var orderId = parseInt(destroyedShipOrderId);
+            if (orderId != currentId) {
+                newAttackOrder.push(attackOrder[i]);
+            }
+        }
+        
+        var newLightsArray = [];
+        var lightsArray = gameObject["e" + targetPlayer];
+        for (n = 0; n < lightsArray.length; n++) {
+            newLightsArray.push(lightsArray[n]);
+        }
+        for(o = 0; o < lightsExtinguish.length; o++){
+            newLightsArray.splice(newLightsArray.indexOf(lightsExtinguish[o]), 1);
+        }
+        
+        // assess damages
+        
+        var set = {$set: {}};
+        set.$set["o"] = newAttackOrder;
+        if (attacker.t > -1) {
+            set.$set["b" + targetPlayer] = newTargetBattlefield;
+        } else if (attacker.t == -1) {
+            set.$set["i" + targetPlayer] = newPrimeIntegrity;
+            set.$set["s" + targetPlayer] = newPrimeShield;
+        }
+        if (lightsExtinguish.length > 0) {
+            set.$set["e" + targetPlayer] = newLightsArray;
+        }
+        demoGameModel.findOneAndUpdate({_id: id}, set, {new: true}, function(err, newGameObject){
+            callback(newGameObject);
+        });
+    });
+}
+
+exports.endOfTurn = function (gameId, callback) {
+    id = mongoose.Types.ObjectId(gameId);
+    exports.getGame(gameId, function(gameObject) {
+        // reset targets
+        
+        // reset players
+        var set = {$set: {}};
+        set.$set["pl"] = 0;
+        demoGameModel.findOneAndUpdate({_id: id}, set, {new: true}, function(err, newGameObject){
+            callback();
+        });
+    });
+}
+
+
 
 
 

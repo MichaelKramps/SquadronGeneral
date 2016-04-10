@@ -9,6 +9,7 @@ var solo = {
     oppBattlefield: null,
     submitButtons: null,
     battlefieldTargets: null,
+    myLife: null,
     //
     
     preload : function () {
@@ -20,7 +21,8 @@ var solo = {
         game.load.image('opponentShip', 'pics/x-wing.png');
         game.load.image('opponentShield', 'pics/opponent-shield.png');
         game.load.image('submitButton', 'pics/submitButton.jpg');
-        game.load.image("laser", "pics/laser.png");
+        game.load.image('laser', 'pics/laser.png');
+        game.load.image('explosion', 'pics/explosion.png');
         
         for (i = 1; i < 17; i++) {
             var num = i.toString();
@@ -44,6 +46,7 @@ var solo = {
         soloState.myBattlefield = game.add.group();
         soloState.submitButtons = game.add.group();
         soloState.battlefieldTargets = game.add.group();
+        soloState.myLife = game.add.group();
         
         var dashboard = game.add.graphics(0, game.world._height * 0.75);
         dashboard.lineStyle(3, 0x1458b7);
@@ -90,6 +93,7 @@ var solo = {
         socket.emit("getGame", soloState.getCookie("gameId"));
         socket.on("sendGame", function(gameObject){
             soloState.drawOpponentShip(gameObject);
+            soloState.drawMyLife(gameObject);
             var productionKey = "pr" + soloState.returnPlayerNumber();
             var playerProduction = gameObject[productionKey];
             soloState.drawEnergy(playerProduction)
@@ -98,6 +102,7 @@ var solo = {
     },
     
     startOfTurn: function (gameObject) {
+        console.log("start of turn");
         // check SoT event listeners
         // act on any existing event listeners
         // start production phase
@@ -137,8 +142,10 @@ var solo = {
     battleOrderPhase: function (numPlayers) {
         if (numPlayers == 2) { // if both players have finished their main phase
             socket.emit("battleOrder", soloState.getCookie("gameId"));
+            console.log("order sent");
         }
         socket.on("sendBattleOrder", function(gameObject){
+            console.log("order received");
             soloState.drawAttackButton();
             soloState.drawAttackBattlefield(gameObject);
             soloState.drawGrid(gameObject, false, soloState.shrinkGrid(gameObject));
@@ -165,9 +172,15 @@ var solo = {
     },
     
     endOfTurn: function () {
+        console.log("end of turn");
         // act on EoT listeners
         // reset necessary game states
         // reset attack targets on battlefield
+        // set players to 0
+        socket.emit("endOfTurn", soloState.getCookie("gameId"));
+        socket.on("sendEndOfTurn", function() {
+            socket.removeListener("sendEndOfTurn", soloState.startOfTurn())
+        });
     },
     
     // submit buttons
@@ -200,6 +213,29 @@ var solo = {
     },
     
     // front end functions
+    
+    drawMyLife: function (gameObject) {
+        var playerNumber = soloState.returnPlayerNumber();
+        var myShield = gameObject["s" + playerNumber];
+        var myIntegrity = gameObject["i" + playerNumber];
+        
+        var scale = (game.world._height * 0.1) / 208;
+        
+        if (myShield > 0) {
+            var myShieldPicture = soloState.myLife.create((game.world._width * 0.5) - (300 * scale), game.world._height * (5 / 6), "opponentShield");
+            myShieldPicture.scale.setTo(scale, scale);
+            var styleShield = { font: game.world._height * 0.03 + "px Arial", fill: "#660033", align: "center"};
+            var shield = new Phaser.Text(game, (game.world._width * 0.5) - 15, game.world._height * (11 / 12), myShield, styleShield);
+            soloState.myLife.add(shield);
+        }
+        
+        var myPicture = soloState.myLife.create((game.world._width * 0.5) - (263 * scale), game.world._height * (5 / 6), "opponentShip");
+        myPicture.scale.setTo(scale, scale);
+        
+        var styleIntegrity = { font: game.world._height * 0.03 + "px Arial", fill: "#ffff66", align: "center"};
+        var integrity = new Phaser.Text(game, (game.world._width * 0.5) - 15, game.world._height * (5 / 6), myIntegrity, styleIntegrity);
+        soloState.myLife.add(integrity);
+    },
     
     drawGrid: function (gameObject, input, callback) {
         
@@ -420,26 +456,27 @@ var solo = {
         
         for (i = 0; i < opponentBattlefield.length; i++) {
             var currentCard = opponentBattlefield[i];
-            
-            var xCoordinate = (((i + 1) / (opponentBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
-            var cardName = currentCard.id.toString() + "b";
-            var currentSprite = soloState.oppBattlefield.create(xCoordinate, yCoordinateOpponent, cardName);
-            currentSprite.scale.setTo(scale, scale);
-            
-            // draw stats for that card
-            var textHeight = (195 * scale) * 0.2;
-            var attackValue = currentCard.ap;
-            var defenseValue = currentCard.dc;
-            var attackX = xCoordinate;
-            var defenseX = xCoordinate + (cardWidth * 0.8);
-            var statsY = (yCoordinateOpponent + (195 * scale)) - textHeight;
-            
-            var styleStats = { font: textHeight + "px Arial", fill: "#ffff00", align: "center"};
-            var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
-            soloState.oppBattlefield.add(attack);
-            
-            var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
-            soloState.oppBattlefield.add(defense);
+            if (currentCard.dc > 0) {
+                var xCoordinate = (((i + 1) / (opponentBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
+                var cardName = currentCard.id.toString() + "b";
+                var currentSprite = soloState.oppBattlefield.create(xCoordinate, yCoordinateOpponent, cardName);
+                currentSprite.scale.setTo(scale, scale);
+                
+                // draw stats for that card
+                var textHeight = (195 * scale) * 0.2;
+                var attackValue = currentCard.ap;
+                var defenseValue = currentCard.dc;
+                var attackX = xCoordinate;
+                var defenseX = xCoordinate + (cardWidth * 0.8);
+                var statsY = (yCoordinateOpponent + (195 * scale)) - textHeight;
+                
+                var styleStats = { font: textHeight + "px Arial", fill: "#ffff00", align: "center"};
+                var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
+                soloState.oppBattlefield.add(attack);
+                
+                var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
+                soloState.oppBattlefield.add(defense);
+            }
         }
         
         // then draw my battlefield
@@ -449,27 +486,28 @@ var solo = {
         
         for (j = 0; j < playerBattlefield.length; j++) {
             var currentCard = playerBattlefield[j];
-            
-            // draw card
-            var xCoordinate = (((j + 1) / (playerBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
-            var cardName = currentCard.id.toString() + "b";
-            var currentSprite = soloState.myBattlefield.create(xCoordinate, yCoordinatePlayer, cardName);
-            currentSprite.scale.setTo(scale, scale);
-            
-            // draw stats for that card
-            var textHeight = (195 * scale) * 0.2;
-            var attackValue = currentCard.ap;
-            var defenseValue = currentCard.dc;
-            var attackX = xCoordinate;
-            var defenseX = xCoordinate + (cardWidth * 0.8);
-            var statsY = (yCoordinatePlayer + (195 * scale)) - textHeight;
-            
-            var styleStats = { font: textHeight + "px Arial", fill: "#ffff00", align: "center"};
-            var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
-            soloState.myBattlefield.add(attack);
-            
-            var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
-            soloState.myBattlefield.add(defense);
+            if (currentCard.dc > 0) {
+                // draw card
+                var xCoordinate = (((j + 1) / (playerBattlefield.length + 1)) * game.world._width) - (cardWidth / 2);
+                var cardName = currentCard.id.toString() + "b";
+                var currentSprite = soloState.myBattlefield.create(xCoordinate, yCoordinatePlayer, cardName);
+                currentSprite.scale.setTo(scale, scale);
+                
+                // draw stats for that card
+                var textHeight = (195 * scale) * 0.2;
+                var attackValue = currentCard.ap;
+                var defenseValue = currentCard.dc;
+                var attackX = xCoordinate;
+                var defenseX = xCoordinate + (cardWidth * 0.8);
+                var statsY = (yCoordinatePlayer + (195 * scale)) - textHeight;
+                
+                var styleStats = { font: textHeight + "px Arial", fill: "#ffff00", align: "center"};
+                var attack = new Phaser.Text(game, attackX, statsY, attackValue, styleStats);
+                soloState.myBattlefield.add(attack);
+                
+                var defense = new Phaser.Text(game, defenseX, statsY, defenseValue, styleStats);
+                soloState.myBattlefield.add(defense);
+            }
         }
     },
     
@@ -876,6 +914,7 @@ var solo = {
     },
     
     prepareGraphic: function (gameObject) {
+        
         var attackOrder = gameObject["o"];
         var attackerKey = attackOrder[0];
         var scale = (game.world._height * 0.2) / 195;
@@ -887,7 +926,7 @@ var solo = {
         var defenderBattlefield = gameObject["b" + defenderPlayerNumber];
         var attackerSprites = null;
         var defenderSprites = null;
-        if (attackerPlayerNumber == soloState.returnPlayerNumber) {
+        if (attackerPlayerNumber == soloState.returnPlayerNumber()) {
             attackerSprites = soloState.myBattlefield.children;
             defenderSprites = soloState.oppBattlefield.children;
         } else {
@@ -904,8 +943,12 @@ var solo = {
             }
         }
         defenderKey = attacker.t;
-        defender = defenderBattlefield[defenderKey];
-        defenderId = defender.id;
+        
+        
+        if (attacker.t > -1) {
+            defender = defenderBattlefield[defenderKey];
+            defenderId = defender.id;
+        }
         // loop over attackerSprites to get attacker xy info
         var attackerX = 0;
         var attackerY = 0;
@@ -921,27 +964,62 @@ var solo = {
         var defenderX = 0;
         var defenderY = 0;
         
-        for (k = 0; k < defenderSprites.length; k++) {
-            currentSprite = defenderSprites[k];
-            if (currentSprite.key == defenderId + "b") {
-                defenderX = currentSprite.x + ((130 * scale) / 2);
-                defenderY = currentSprite.y + ((195 * scale) / 2);
+        if (defenderKey > -1) {
+            for (k = 0; k < defenderSprites.length; k++) {
+                currentSprite = defenderSprites[k];
+                if (currentSprite.key == defenderId + "b") {
+                    defenderX = currentSprite.x + ((130 * scale) / 2);
+                    defenderY = currentSprite.y + ((195 * scale) / 2);
+                }
+            }
+        } else if (defenderKey == -1) {
+            // attacking prime ship
+            defenderX = game.world._width / 2;
+            if (defenderPlayerNumber == soloState.returnOpponentNumber()) {
+                defenderY = game.world._height / 6;
+            } else {
+                defenderY = game.world._height * (5 / 6);
             }
         }
         
         // fireShotGraphic
-        soloState.fireShotGraphic(attackerX, attackerY, defenderX, defenderY, soloState.blank());
+        if (attacker.t > -1) {
+            if (defender.dc > 0) {
+                soloState.fireShotGraphic(attackerX, attackerY, defenderX, defenderY);
+            } else {
+                soloState.fireServerCallback();
+            }
+        } else if (defenderKey == -1) {
+            soloState.fireShotGraphic(attackerX, attackerY, defenderX, defenderY);
+        } else {
+            soloState.fireServerCallback();
+        }
         
     },
     
-    fireShotGraphic: function (attackerX, attackerY, targetX, targetY, callback) {
+    fireShotGraphic: function (attackerX, attackerY, targetX, targetY) {
         // draw laser starting at attacker
-        var laser = new Sprite(game, attackerX, attackerY, "laser");
+        var laser = new Phaser.Sprite(game, attackerX, attackerY, 'laser');
         soloState.battlefieldTargets.add(laser);
         
+        // send laser to target
+        var laserTween = game.add.tween(laser).to( { x: targetX, y: targetY }, 800, Phaser.Easing.Default, true);
         
         // destroy laser and draw explosion
-
+        var fireServerCallback = function () {
+            socket.emit("shipFires", soloState.getCookie("gameId"));
+            socket.on("sendShipFires", function (newGameObject) {
+                socket.removeListener("sendShipFires", soloState.redrawDamageBattlefield(newGameObject));
+            });
+        };
+        var explode = function () {
+            soloState.battlefieldTargets.removeAll();
+            var explosion = new Phaser.Sprite(game, targetX - 50, targetY - 41, 'explosion');
+            soloState.battlefieldTargets.add(explosion);
+            var explosionTween = game.add.tween(explosion).to( { alpha: 0 }, 400, Phaser.Easing.Default, true);
+            explosionTween.onComplete.add(fireServerCallback);
+        };
+        laserTween.onComplete.add(explode);
         // callback to server
     },
     
@@ -960,11 +1038,13 @@ var solo = {
         soloState.battlefieldTargets.removeAll();
         soloState.myBattlefield.removeAll();
         soloState.oppBattlefield.removeAll();
+        soloState.myLife.removeAll();
         
         // draw battlefield w/ prime ships
         
         soloState.drawOpponentShip(gameObject);
         soloState.drawBattlefield(gameObject);
+        soloState.drawMyLife(gameObject);
         
         // check to see if all attacks are done
         var attackOrder = gameObject["o"];

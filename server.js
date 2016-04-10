@@ -248,6 +248,20 @@ io.on('connection', function (socket) {
           io.sockets.in(gameId).emit("sendDealDamagePhase", gameObject);
       });
   });
+  
+  socket.on("shipFires", function (gameId) {
+      mongoGame.shipFires(gameId, function(newGameObject){
+          socket.emit("sendShipFires", newGameObject);
+      });
+  });
+  
+  // End of Turn
+  
+  socket.on("endOfTurn", function (gameId) {
+      mongoGame.endOfTurn(gameId, function(){
+          socket.emit("sendEndOfTurn");
+      })
+  });
 });
 
 
