@@ -130,6 +130,8 @@ var solo = {
     },
     
     mainPhase: function () {
+        // draw half battlefield
+        soloState.startDrawMyBattlefield();
         // Players can now play ships and commands
         // get game object
         socket.emit("getGame", soloState.getCookie("gameId"));

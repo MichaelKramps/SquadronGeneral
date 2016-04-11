@@ -46,8 +46,8 @@ exports.startNewDemo = function(callback){
         "i2": 20, // Integrity of player 2's mother ship
         "s1": 20, // Shield on player 1's mother ship
         "s2": 20, // Shield on player 2's mother ship
-        "pr1": 8, // player 1's productivity (energy per turn)
-        "pr2": 8, // player 2's productivity
+        "pr1": 2, // player 1's productivity (energy per turn)
+        "pr2": 2, // player 2's productivity
         "sp1": [1], // special card(s) for p1
         "sp2": [2], // special card(s) for p2
         "g1": [2, 5], // grid layout for p1 (2x5)
@@ -509,6 +509,7 @@ exports.shipFires = function (gameId, callback) {
         
         var set = {$set: {}};
         set.$set["o"] = newAttackOrder;
+        set.$set["pl"] = 0;
         if (attacker.t > -1) {
             set.$set["b" + targetPlayer] = newTargetBattlefield;
         } else if (attacker.t == -1) {
@@ -528,10 +529,26 @@ exports.endOfTurn = function (gameId, callback) {
     id = mongoose.Types.ObjectId(gameId);
     exports.getGame(gameId, function(gameObject) {
         // reset targets
+        var battlefield1 = gameObject["b1"];
+        var battlefield2 = gameObject["b2"];
+        var newBattlefield1 = [];
+        var newBattlefield2 = [];
+        for (i = 0; i < battlefield1.length; i++) {
+            var currentCard = battlefield1[i];
+            if (currentCard.dc > 0) {
+                newBattlefield1.push(currentCard);
+            }
+        }
+        for (j = 0; j < battlefield2.length; j++) {
+            var currentCard = battlefield2[j];
+            if (currentCard.dc > 0) {
+                newBattlefield2.push(currentCard);
+            }
+        }
         
-        // reset players
         var set = {$set: {}};
-        set.$set["pl"] = 0;
+        set.$set["b1"] = newBattlefield1;
+        set.$set["b2"] = newBattlefield2;
         demoGameModel.findOneAndUpdate({_id: id}, set, {new: true}, function(err, newGameObject){
             callback();
         });
